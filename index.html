@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CryptoMiner | Next Gen Mining Experience</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.7.1/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.7.1/ScrollTrigger.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Syncopate:wght@400;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Space Grotesk', sans-serif;
+        }
+
+        body {
+            background: #0a0a0a;
+            color: #fff;
+            overflow-x: hidden;
+        }
+
+        #canvas-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            z-index: 1;
+        }
+
+        .content-wrapper {
+            position: relative;
+            z-index: 2;
+        }
+
+        .nav-wrapper {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 100;
+            padding: 20px 40px;
+            background: rgba(10, 10, 10, 0.8);
+            backdrop-filter: blur(10px);
+        }
+
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .logo {
+            font-family: 'Syncopate', sans-serif;
+            font-weight: 700;
+            font-size: 1.5rem;
+            background: linear-gradient(45deg, #00f2fe, #4facfe);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+        }
+
+        .nav-links a {
+            color: #fff;
+            text-decoration: none;
+            font-weight: 500;
+            position: relative;
+            padding: 5px 0;
+        }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: #4facfe;
+            transition: width 0.3s ease;
+        }
+
+        .nav-links a:hover::after {
+            width: 100%;
+        }
+
+        .hero {
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            padding: 0 40px;
+        }
+
+        .hero-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .hero-title {
+            font-family: 'Syncopate', sans-serif;
+            font-size: 5rem;
+            font-weight: 700;
+            line-height: 1.1;
+            margin-bottom: 2rem;
+            background: linear-gradient(45deg, #00f2fe, #4facfe);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .hero-subtitle {
+            font-size: 1.5rem;
+            color: #888;
+            margin-bottom: 3rem;
+            max-width: 600px;
+        }
+
+        .cta-button {
+            display: inline-flex;
+            align-items: center;
+            padding: 1rem 2rem;
+            background: linear-gradient(45deg, #00f2fe, #4facfe);
+            border: none;
+            border-radius: 30px;
+            color: #fff;
+            font-size: 1.1rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .cta-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(79, 172, 254, 0.3);
+        }
+
+        .fa-telegram {
+            margin-right: 10px;
+            font-size: 1.2rem;
+        }
+
+        .features {
+            padding: 100px 40px;
+            background: linear-gradient(180deg, #0a0a0a 0%, #111 100%);
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .feature-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 2rem;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .feature-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(45deg, #00f2fe, #4facfe);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .feature-title {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+
+        .feature-description {
+            color: #888;
+            line-height: 1.6;
+        }
+
+        .faucet-section {
+            padding: 100px 40px;
+            background: #111;
+        }
+
+        .section-title {
+            font-family: 'Syncopate', sans-serif;
+            font-size: 3rem;
+            text-align: center;
+            margin-bottom: 4rem;
+            background: linear-gradient(45deg, #00f2fe, #4facfe);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .faucet-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .faucet-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 2rem;
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+
+        .faucet-card:hover {
+            transform: scale(1.05);
+        }
+
+        .crypto-icon {
+            font-size: 3rem;
+            margin-bottom: 1.5rem;
+            display: inline-block;
+        }
+
+        .crypto-icon.btc {
+            color: #f7931a;
+        }
+
+        .crypto-icon.eth {
+            color: #627eea;
+        }
+
+        .crypto-icon.ltc {
+            color: #345d9d;
+        }
+
+        .faucet-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .faucet-card p {
+            color: #888;
+            line-height: 1.6;
+        }
+
+        @media (max-width: 768px) {
+            .hero-title {
+                font-size: 3rem;
+            }
+
+            .hero-subtitle {
+                font-size: 1.2rem;
+            }
+
+            .nav-links {
+                display: none;
+            }
+        }
+
+        /* Loading Animation */
+        .loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #0a0a0a;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .loader {
+            width: 50px;
+            height: 50px;
+            border: 3px solid #4facfe;
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="loading-screen">
+        <div class="loader"></div>
+    </div>
+
+    <div id="canvas-container"></div>
+
+    <div class="content-wrapper">
+        <div class="nav-wrapper">
+            <nav>
+                <div class="logo">CRYPTOMINER</div>
+                <div class="nav-links">
+                    <a href="#features">Özellikler</a>
+                    <a href="#faucet">Faucet</a>
+                    <a href="#about">Hakkında</a>
+                </div>
+            </nav>
+        </div>
+
+        <section class="hero">
+            <div class="hero-content">
+                <h1 class="hero-title">GELECEK NESİL<br>MADENCİLİK DENEYİMİ</h1>
+                <p class="hero-subtitle">Telegram üzerinden kripto madenciliği simülasyonu ve gerçek kripto para kazanma fırsatı.</p>
+                <a href="https://t.me/YourBotUsername" class="cta-button">
+                    <i class="fab fa-telegram"></i>
+                    Telegram'da Başla
+                </a>
+            </div>
+        </section>
+
+        <section id="features" class="features">
+            <div class="features-grid">
+                <div class="feature-card">
+                    <i class="fas fa-robot feature-icon"></i>
+                    <h3 class="feature-title">Telegram Bot</h3>
+                    <p class="feature-description">Kullanıcı dostu arayüz ile Telegram üzerinden kolay erişim ve kontrol.</p>
+                </div>
+                <div class="feature-card">
+                    <i class="fas fa-coins feature-icon"></i>
+                    <h3 class="feature-title">Gerçek Kazanç</h3>
+                    <p class="feature-description">FaucetPay entegrasyonu ile kazançlarınızı gerçek kripto paraya dönüştürün.</p>
+                </div>
+                <div class="feature-card">
+                    <i class="fas fa-chart-line feature-icon"></i>
+                    <h3 class="feature-title">Gelişmiş Sistem</h3>
+                    <p class="feature-description">Detaylı istatistikler ve gerçek zamanlı madencilik simülasyonu.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="faucet" class="faucet-section">
+            <h2 class="section-title">FAUCET SİSTEMİ</h2>
+            <div class="faucet-grid">
+                <div class="faucet-card">
+                    <i class="fab fa-bitcoin crypto-icon btc"></i>
+                    <h3>Bitcoin Faucet</h3>
+                    <p>Her saat başı ücretsiz Bitcoin kazanma fırsatı.</p>
+                </div>
+                <div class="faucet-card">
+                    <i class="fab fa-ethereum crypto-icon eth"></i>
+                    <h3>Ethereum Faucet</h3>
+                    <p>Günlük görevler ile Ethereum ödülleri.</p>
+                </div>
+                <div class="faucet-card">
+                    <i class="fas fa-coins crypto-icon ltc"></i>
+                    <h3>MultiCoin Faucet</h3>
+                    <p>Birden fazla kripto para seçeneği ile kazanç.</p>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        // Three.js Animation
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.getElementById('canvas-container').appendChild(renderer.domElement);
+
+        // Create particle system
+        const particlesGeometry = new THREE.BufferGeometry();
+        const particlesCount = 1500;
+        const posArray = new Float32Array(particlesCount * 3);
+
+        for(let i = 0; i < particlesCount * 3; i++) {
+            posArray[i] = (Math.random() - 0.5) * 5;
+        }
+
+        particlesGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+
+        const particlesMaterial = new THREE.PointsMaterial({
+            size: 0.005,
+            color: '#4facfe',
+            transparent: true,
+            opacity: 0.8,
+            blending: THREE.AdditiveBlending
+        });
+
+        const particlesMesh = new THREE.Points(particlesGeometry, particlesMaterial);
+        scene.add(particlesMesh);
+
+        camera.position.z = 2;
+
+        // Mouse movement effect
+        let mouseX = 0;
+        let mouseY = 0;
+
+        document.addEventListener('mousemove', (event) => {
+            mouseX = event.clientX / window.innerWidth - 0.5;
+            mouseY = event.clientY / window.innerHeight - 0.5;
+        });
+
+        function animate() {
+            requestAnimationFrame (animate);
+
+particlesMesh.rotation.x += 0.001;
+particlesMesh.rotation.y += 0.001;
+
+// Mouse effect
+camera.position.x += (mouseX * 2 - camera.position.x) * 0.03;
+camera.position.y += (-mouseY * 2 - camera.position.y) * 0.03;
+
+renderer.render(scene, camera);
+}
+
+animate();
+
+// Handle window resize
+window.addEventListener('resize', () => {
+camera.aspect = window.innerWidth / window.innerHeight;
+camera.updateProjectionMatrix();
+renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+// Loading screen animation
+window.addEventListener('load', () => {
+const loadingScreen = document.querySelector('.loading-screen');
+gsap.to(loadingScreen, {
+    opacity: 0,
+    duration: 1,
+    onComplete: () => {
+        loadingScreen.style.display = 'none';
+    }
+});
+
+// Animate hero content
+gsap.from('.hero-title', {
+    y: 100,
+    opacity: 0,
+    duration: 1,
+    delay: 0.5
+});
+
+gsap.from('.hero-subtitle', {
+    y: 50,
+    opacity: 0,
+    duration: 1,
+    delay: 0.8
+});
+
+gsap.from('.cta-button', {
+    y: 30,
+    opacity: 0,
+    duration: 1,
+    delay: 1
+});
+
+// Scroll animations
+gsap.registerPlugin(ScrollTrigger);
+
+gsap.from('.feature-card', {
+    scrollTrigger: {
+        trigger: '.features',
+        start: 'top center'
+    },
+    y: 100,
+    opacity: 0,
+    duration: 1,
+    stagger: 0.2
+});
+
+gsap.from('.faucet-card', {
+    scrollTrigger: {
+        trigger: '.faucet-section',
+        start: 'top center'
+    },
+    y: 100,
+    opacity: 0,
+    duration: 1,
+    stagger: 0.2
+});
+});
+
+// Smooth scroll
+document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+anchor.addEventListener('click', function (e) {
+    e.preventDefault();
+    document.querySelector(this.getAttribute('href')).scrollIntoView({
+        behavior: 'smooth'
+    });
+});
+});
+</script>
+</body>
+</html>
