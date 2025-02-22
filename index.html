@@ -3,24 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Advanced Goblin Mining Empire</title>
+    <title>Ultimate Goblin Mining Empire v3</title>
     
-    <!-- TON Connect SDK -->
+    <!-- SDKs -->
     <script src="https://unpkg.com/@tonconnect/sdk@2.1.3/dist/tonconnect-sdk.min.js"></script>
-    <script src="https://unpkg.com/@tonconnect/ui@1.0.0-beta.13/dist/tonconnect-ui.min.js"></script>
+    <script src="https://unpkg.com/@tonconnect/ui@1.0.0-beta.6/dist/tonconnect-ui.min.js"></script>
     
-    <!-- Gerekli CSS ve JS kütüphaneleri -->
+    <!-- CDNs -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/web3/1.8.1/web3.min.js"></script>
-    
+
+    <!-- Game Manifest -->
+    <script>
+        window.GAME_MANIFEST = {
+            url: window.location.origin,
+            name: "Ultimate Goblin Mining Empire",
+            iconUrl: "https://ton.org/download/ton_symbol.png",
+            version: "3.0.0"
+        };
+        
+        window.GAME_MANIFEST_BASE64 = btoa(JSON.stringify(window.GAME_MANIFEST));
+    </script>
+
     <style>
         :root {
             --primary: #4f46e5;
             --secondary: #818cf8;
             --accent: #c084fc;
-            --background: #1a103c;
-            --surface: #2d1f62;
+            --background: #0a0a2a;
+            --surface: #1a103c;
             --text: #e0e7ff;
             --success: #22c55e;
             --warning: #eab308;
@@ -28,6 +39,10 @@
             --gold: #ffd700;
             --silver: #c0c0c0;
             --bronze: #cd7f32;
+            --legendary: #ff4500;
+            --epic: #9400d3;
+            --rare: #0000ff;
+            --common: #808080;
         }
 
         * {
@@ -76,6 +91,27 @@
             -webkit-text-fill-color: transparent;
         }
 
+        .navigation {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .nav-button {
+            background: var(--surface);
+            color: var(--text);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .nav-button:hover {
+            background: var(--primary);
+            transform: translateY(-2px);
+        }
+
         .balance-container {
             display: flex;
             gap: 15px;
@@ -93,6 +129,28 @@
         .balance-card:hover {
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .game-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .card {
+            background: var(--surface);
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
         }
 
         .button {
@@ -128,35 +186,26 @@
             left: 100%;
         }
 
-        .button.mining {
-            background: linear-gradient(45deg, var(--accent), var(--secondary));
-        }
-
-        .button.shop {
-            background: linear-gradient(45deg, var(--success), var(--primary));
-        }
-
-        .game-grid {
+        .nft-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-            gap: 20px;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
             margin-top: 20px;
         }
 
-        .card {
+        .nft-card {
             background: var(--surface);
-            padding: 20px;
-            border-radius: 15px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
             transition: all 0.3s ease;
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(10px);
         }
 
-        .card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
-        }
+        .nft-card.legendary { border-color: var(--legendary); }
+        .nft-card.epic { border-color: var(--epic); }
+        .nft-card.rare { border-color: var(--rare); }
+        .nft-card.common { border-color: var(--common); }
 
         .progress-bar {
             width: 100%;
@@ -176,117 +225,25 @@
             transition: width 0.3s ease;
         }
 
-        .progress::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(
-                90deg,
-                transparent,
-                rgba(255, 255, 255, 0.2),
-                transparent
-            );
-            animation: shimmer 2s infinite;
-        }
-
-        @keyframes shimmer {
-            0% { transform: translateX(-100%); }
-            100% { transform: translateX(100%); }
-        }
-
         .disabled {
             opacity: 0.5;
             cursor: not-allowed;
             transform: none !important;
         }
 
-        .card-title {
-            font-size: 1.5em;
-            margin-bottom: 15px;
-            color: var(--text);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .card-title i {
-            color: var(--accent);
-        }
-
-        .stats {
-            margin-top: 15px;
-            padding: 15px;
+        .daily-quest {
             background: rgba(255, 255, 255, 0.05);
-            border-radius: 8px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .stats p {
-            margin: 8px 0;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 10px 0;
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
 
-        .resource-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 10px;
-            margin-top: 15px;
-        }
-
-        .resource-card {
-            background: rgba(255, 255, 255, 0.05);
-            padding: 10px;
-            border-radius: 8px;
-            text-align: center;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .resource-card i {
-            font-size: 1.5em;
-            margin-bottom: 5px;
-            color: var(--accent);
-        }
-
-        .tooltip {
-            position: relative;
-            display: inline-block;
-        }
-
-        .tooltip .tooltiptext {
-            visibility: hidden;
-            width: 200px;
-            background-color: rgba(0, 0, 0, 0.8);
-            color: var(--text);
-            text-align: center;
-            border-radius: 6px;
-            padding: 10px;
-            position: absolute;
-            z-index: 1;
-            bottom: 125%;
-            left: 50%;
-            transform: translateX(-50%);
-            opacity: 0;
-            transition: opacity 0.3s;
-        }
-
-        .tooltip:hover .tooltiptext {
-            visibility: visible;
-            opacity: 1;
-        }
-
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); }
-        }
-
-        .mining-animation {
-            animation: pulse 1s infinite;
+        .daily-quest .progress {
+            width: 100px;
+            height: 8px;
         }
 
         .notification {
@@ -310,91 +267,101 @@
             to { transform: translateX(0); }
         }
 
-        .achievement {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
+        .guild-info {
             padding: 15px;
+            background: rgba(255, 255, 255, 0.05);
             border-radius: 10px;
-            background: linear-gradient(45deg, var(--gold), var(--accent));
-            color: white;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-            z-index: 1000;
-            animation: achievementSlide 0.5s ease-out;
+            margin-top: 15px;
         }
 
-        @keyframes achievementSlide {
-            from { transform: translateY(100%); }
-            to { transform: translateY(0); }
-        }
-
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.8);
-            z-index: 1000;
-            backdrop-filter: blur(5px);
-        }
-
-        .modal-content {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: var(--surface);
-            padding: 30px;
-            border-radius: 15px;
-            max-width: 500px;
-            width: 90%;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .close-modal {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            background: none;
-            border: none;
-            color: var(--text);
-            font-size: 1.5em;
-            cursor: pointer;
-        }
-
-        .leaderboard {
-            margin-top: 20px;
-        }
-
-        .leaderboard-item {
+        .guild-member {
             display: flex;
             justify-content: space-between;
             align-items: center;
             padding: 10px;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 8px;
-            margin: 5px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
 
-        .rank-1 { border: 1px solid var(--gold); }
-        .rank-2 { border: 1px solid var(--silver); }
-        .rank-3 { border: 1px solid var(--bronze); }
+        .equipment-slot {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 10px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .achievement-card {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 10px 0;
+            border-left: 4px solid var(--gold);
+        }
+
+        .level-progress {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .level-progress .progress-bar {
+            flex: 1;
+        }
+
+        .buff-icon {
+            position: relative;
+            display: inline-block;
+        }
+
+        .buff-icon::after {
+            content: attr(data-time);
+            position: absolute;
+            bottom: -5px;
+            right: -5px;
+            background: var(--surface);
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-size: 0.8em;
+        }
+
+        /* Animasyonlar */
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+
+        @keyframes glow {
+            0% { box-shadow: 0 0 5px var(--accent); }
+            50% { box-shadow: 0 0 20px var(--accent); }
+            100% { box-shadow: 0 0 5px var(--accent); }
+        }
+
+        .floating {
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .glowing {
+            animation: glow 2s ease-in-out infinite;
+        }
     </style>
 </head>
 <body>
     <div class="container">
+        <!-- Header -->
         <div class="header">
             <div class="logo">
-                <i class="fas fa-gem fa-lg"></i>
-                <span>Goblin Mining Empire v2.0</span>
+                <i class="fas fa-gem"></i>
+                <span>Goblin Mining Empire v3</span>
             </div>
             <div class="balance-container">
                 <div class="balance-card tooltip">
                     <small>GTOKEN</small>
                     <h3 id="tokenBalance">0.00</h3>
-                    <span class="tooltiptext">Kazandığınız Goblin Tokenlar</span>
+                    <span class="tooltiptext">Goblin Tokenlarınız</span>
                 </div>
                 <div class="balance-card tooltip">
                     <small>TON</small>
@@ -402,7 +369,7 @@
                     <span class="tooltiptext">TON Bakiyeniz</span>
                 </div>
                 <div class="balance-card tooltip">
-                    <small>LEVEL</small>
+                    <small>SEVİYE</small>
                     <h3 id="playerLevel">1</h3>
                     <span class="tooltiptext">Oyuncu Seviyeniz</span>
                 </div>
@@ -412,189 +379,207 @@
             </div>
         </div>
 
-        <div class="game-grid">
-            <!-- Madencilik Kartı -->
-            <div class="card animate__animated animate__fadeIn">
-                <h2 class="card-title"><i class="fas fa-hammer"></i> Madencilik Merkezi</h2>
+        <!-- Navigation -->
+        <div class="navigation">
+            <button class="nav-button" onclick="switchTab('mining')">
+                <i class="fas fa-hammer"></i> Madencilik
+            </button>
+            <button class="nav-button" onclick="switchTab('inventory')">
+                <i class="fas fa-box"></i> Envanter
+            </button>
+            <button class="nav-button" onclick="switchTab('guild')">
+                <i class="fas fa-users"></i> Lonca
+            </button>
+            <button class="nav-button" onclick="switchTab('quests')">
+                <i class="fas fa-scroll"></i> Görevler
+            </button>
+            <button class="nav-button" onclick="switchTab('nft')">
+                <i class="fas fa-store"></i> NFT Market
+            </button>
+        </div>
+
+        <!-- Tabs -->
+        <div id="miningTab" class="game-grid">
+            <!-- Mining Card -->
+            <div class="card">
+                <h2><i class="fas fa-hammer"></i> Madencilik Merkezi</h2>
+                <div class="level-progress">
+                    <span>Level ${gameState.miningLevel}</span>
+                    <div class="progress-bar">
+                        <div id="miningLevelProgress" class="progress"></div>
+                    </div>
+                    <span>Sonraki Level</span>
+                </div>
                 <div class="resource-grid">
-                    <div class="resource-card tooltip">
-                        <i class="fas fa-gem"></i>
-                        <p>Kazma Gücü</p>
-                        <h4 id="miningPower">1.0x</h4>
-                        <span class="tooltiptext">Toplam madencilik gücünüz</span>
-                    </div>
-                    <div class="resource-card tooltip">
+                    <div class="resource-card">
                         <i class="fas fa-bolt"></i>
-                        <p>Enerji</p>
-                        <h4 id="energyLevel">100%</h4>
-                        <span class="tooltiptext">Kalan madencilik enerjiniz</span>
+                        <p>Madenci Gücü</p>
+                        <h4 id="miningPower">1.0x</h4>
                     </div>
+                    <div class="resource-card">
+                        <i class="fas fa-fire"></i>
+                        <p>Enerji</p>
+                        <h4 id="energy">100/100</h4>
+                    </div>
+                </div>
+                <div class="active-buffs" id="activeBuffs">
+                    <!-- Active buffs will be added here -->
                 </div>
                 <div class="progress-bar">
                     <div id="miningProgress" class="progress"></div>
                 </div>
-                <button id="mineButton" class="button mining">
+                <button id="mineButton" class="button">
                     <i class="fas fa-hammer"></i> Maden Kaz
                 </button>
-                <p>Sonraki kazım: <span id="cooldown">0</span> saniye</p>
-                <div class="stats">
-                    <p>Kazanılan Token: <span id="minedAmount">0.00</span></p>
-                    <p>Kritik Vuruş Şansı: <span id="criticalChance">5%</span></p>
-                    <p>Son Kazanç: <span id="lastReward">0.00</span></p>
+            </div>
+
+            <!-- Equipment Card -->
+            <div class="card">
+                <h2><i class="fas fa-tools"></i> Ekipman</h2>
+                <div class="equipment-slots">
+                    <div class="equipment-slot" id="pickaxeSlot">
+                        <span>Kazma</span>
+                        <button onclick="upgradeEquipment('pickaxe')" class="button">Geliştir</button>
+                    </div>
+                    <div class="equipment-slot" id="helmetSlot">
+                        <span>Kask</span>
+                        <button onclick="upgradeEquipment('helmet')" class="button">Geliştir</button>
+                    </div>
+                    <div class="equipment-slot" id="armorSlot">
+                        <span>Zırh</span>
+                        <button onclick="upgradeEquipment('armor')" class="button">Geliştir</button>
+                    </div>
                 </div>
             </div>
 
-            <!-- Market Kartı -->
-            <div class="card animate__animated animate__fadeIn">
-                <h2 class="card-title"><i class="fas fa-store"></i> Goblin Marketi</h2>
-                <div class="resource-grid">
-                    <div class="resource-card">
-                        <i class="fas fa-user-hard-hat"></i>
-                        <p>İşçiler</p>
-                        <h4 id="workerCount">0</h4>
-                    </div>
-                    <div class="resource-card">
-                        <i class="fas fa-mountain"></i>
-                        <p>Madenler</p>
-                        <h4 id="mineCount">0</h4>
-                    </div>
-                </div>
-                <div class="shop-items">
-                    <div class="shop-item tooltip">
-                        <button onclick="buyWorker()" class="button shop">
-                            İşçi Al (1 TON)
-                        </button>
-                        <span class="tooltiptext">Her işçi saatte 0.2 GTOKEN üretir</span>
-                    </div>
-                    <div class="shop-item tooltip">
-                        <button onclick="buyMine()" class="button shop" style="margin-top: 10px;">
-                            Maden Al (2 TON)
-                        </button>
-                        <span class="tooltiptext">Her maden saatte 0.5 GTOKEN üretir</span>
-                    </div>
-                    <div class="shop-item tooltip">
-                        <button onclick="upgradeEquipment()" class="button shop" style="margin-top: 10px;">
-                            Ekipman Geliştir (3 TON)
-                        </button>
-                        <span class="tooltiptext">Madencilik gücünüzü %10 artırır</span>
-                    </div>
-                </div>
-                <div class="stats">
-                    <p>İşçi Sayısı: <span id="totalWorkers">0</span></p>
-                    <p>Maden Sayısı: <span id="totalMines">0</span></p>
-                    <p>Saatlik Gelir: <span id="hourlyIncome">0.00</span> TOKEN</p>
-                    <p>Ekipman Seviyesi: <span id="equipmentLevel">1</span></p>
-                </div>
-            </div>
-
-            <!-- Stake ve Ödül Kartı -->
-            <div class="card animate__animated animate__fadeIn">
-                <h2 class="card-title"><i class="fas fa-trophy"></i> Stake & Ödüller</h2>
-                <div class="resource-grid">
-                    <div class="resource-card">
-                        <i class="fas fa-coins"></i>
-                        <p>Stake Edilen</p>
-                        <h4 id="stakedAmount">0.00</h4>
-                    </div>
-                    <div class="resource-card">
-                        <i class="fas fa-percentage"></i>
-                        <p>APY</p>
-                        <h4>25%</h4>
-                    </div>
-                </div>
-                <div class="stake-controls">
-                    <input type="number" id="stakeAmount" placeholder="Stake miktarı" min="0" step="0.1"
-                        class="stake-input">
-                    <button onclick="stakeTokens()" class="button">
-                        <i class="fas fa-lock"></i> Stake Et
-                    </button>
-                </div>
-                <div class="stats">
-                    <p>Stake Süresi: <span id="stakeDuration">0 gün</span></p>
-                    <p>Kazanılan Ödül: <span id="stakeRewards">0.00</span></p>
-                    <p>Next Reward: <span id="nextReward">24:00:00</span></p>
-                </div>
-                <button onclick="claimRewards()" class="button" style="margin-top: 15px;">
-                    <i class="fas fa-gift"></i> Ödülleri Topla
-                </button>
-            </div>
-        </div>
-
-        <!-- Başarımlar Modalı -->
-        <div id="achievementsModal" class="modal">
-            <div class="modal-content">
-                <button class="close-modal" onclick="closeModal('achievementsModal')">&times;</button>
-                <h2><i class="fas fa-trophy"></i> Başarımlar</h2>
-                <div class="achievements-list" id="achievementsList">
-                    <!-- Başarımlar JS ile doldurulacak -->
+            <!-- Daily Quests Card -->
+            <div class="card">
+                <h2><i class="fas fa-calendar"></i> Günlük Görevler</h2>
+                <div id="dailyQuests">
+                    <!-- Daily quests will be added here -->
                 </div>
             </div>
         </div>
 
-        <!-- Liderlik Tablosu Modalı -->
-        <div id="leaderboardModal" class="modal">
-            <div class="modal-content">
-                <button class="close-modal" onclick="closeModal('leaderboardModal')">&times;</button>
-                <h2><i class="fas fa-crown"></i> Liderlik Tablosu</h2>
-                <div class="leaderboard" id="leaderboardList">
-                    <!-- Liderlik tablosu JS ile doldurulacak -->
+        <!-- Guild Tab -->
+        <div id="guildTab" class="game-grid" style="display: none;">
+            <div class="card">
+                <h2><i class="fas fa-crown"></i> Lonca Merkezi</h2>
+                <div class="guild-info">
+                    <h3>Lonca: <span id="guildName">Henüz bir loncaya katılmadınız</span></h3>
+                    <div id="guildMembers">
+                        <!-- Guild members will be added here -->
+                    </div>
+                </div>
+                <div class="guild-missions">
+                    <h3>Lonca Görevleri</h3>
+                    <div id="guildMissions">
+                        <!-- Guild missions will be added here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- NFT Market Tab -->
+        <div id="nftTab" class="game-grid" style="display: none;">
+            <div class="card">
+                <h2><i class="fas fa-store"></i> NFT Market</h2>
+                <div class="nft-grid" id="nftMarket">
+                    <!-- NFT items will be added here -->
+                </div>
+            </div>
+            <div class="card">
+                <h2><i class="fas fa-collection"></i> NFT Koleksiyonum</h2>
+                <div class="nft-grid" id="nftCollection">
+                    <!-- Player's NFTs will be added here -->
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        // Oyun durumu
-        let gameState = {
+        // Game State
+        const gameState = {
             walletConnected: false,
-            miningCooldown: false,
-            cooldownTime: 60,
-            tokenBalance: 0,
-            tonBalance: 0,
-            workers: 0,
-            mines: 0,
-            hourlyIncome: 0,
+            miningLevel: 1,
+            miningExp: 0,
             miningPower: 1.0,
             energy: 100,
-            equipmentLevel: 1,
-            playerLevel: 1,
-            experience: 0,
-            stakedAmount: 0,
-            stakeDuration: 0,
-            stakeRewards: 0,
-            achievements: [],
-            criticalChance: 5,
-            lastReward: 0
+            maxEnergy: 100,
+            energyRegen: 1,
+            tokenBalance: 0,
+            tonBalance: 0,
+            equipment: {
+                pickaxe: { level: 1, power: 1 },
+                helmet: { level: 1, defense: 1 },
+                armor: { level: 1, defense: 1 }
+            },
+            activeBuffs: [],
+            inventory: [],
+            nftCollection: [],
+            guild: null,
+            dailyQuests: [],
+            achievements: []
         };
 
-        // Başarımlar
-        const achievements = [
-            { id: 1, name: "İlk Madenci", description: "İlk madenini kaz", reward: 1 },
-            { id: 2, name: "İşçi Patronu", description: "5 işçi satın al", reward: 2 },
-            { id: 3, name: "Maden İmparatoru", description: "10 maden satın al", reward: 5 },
-            { id: 4, name: "Stake Ustası", description: "100 GTOKEN stake et", reward: 10 }
+        // NFT Definitions
+        const nftTypes = {
+            LEGENDARY: {
+                color: 'var(--legendary)',
+                multiplier: 2.0,
+                dropRate: 0.01
+            },
+            EPIC: {
+                color: 'var(--epic)',
+                multiplier: 1.5,
+                dropRate: 0.05
+            },
+            RARE: {
+                color: 'var(--rare)',
+                multiplier: 1.25,
+                dropRate: 0.15
+            },
+            COMMON: {
+                color: 'var(--common)',
+                multiplier: 1.1,
+                dropRate: 0.79
+            }
+        };
+
+        // Daily Quest Templates
+        const dailyQuestTemplates = [
+            {
+                type: 'MINE',
+                description: 'Maden kaz',
+                target: 10,
+                reward: 5
+            },
+            {
+                type: 'UPGRADE',
+                description: 'Ekipman geliştir',
+                target: 3,
+                reward: 10
+            },
+            {
+                type: 'COLLECT',
+                description: 'Token topla',
+                target: 100,
+                reward: 15
+            }
         ];
 
-        let tonConnectUI;
-
+        // Initialize TON Connect
         async function initializeTonConnect() {
             try {
-                if (typeof window.TonConnectUI === 'undefined') {
-                    console.log('TonConnectUI yükleniyor...');
-                    return;
-                }
-
-                const manifestUrl = 'https://raw.githubusercontent.com/ton-connect/demo-dapp-with-react/main/public/tonconnect-manifest.json';
+                console.log('TON Connect başlatılıyor...');
+                
+                const manifestUrl = `data:application/json;base64,${window.GAME_MANIFEST_BASE64}`;
 
                 tonConnectUI = new window.TonConnectUI({
                     manifestUrl: manifestUrl,
                     buttonRootId: 'connectButton',
-                    uiPreferences: {
-                        theme: 'DARK'
-                    }
+                    uiPreferences: { theme: 'DARK' }
                 });
-
-                console.log('TonConnect başarıyla başlatıldı');
 
                 const wallet = await tonConnectUI.getWallet();
                 if (wallet) {
@@ -604,415 +589,365 @@
                 tonConnectUI.onStatusChange(handleWalletConnection);
 
             } catch (error) {
-                console.error('TonConnect initialization error:', error);
-                showNotification('TonConnect başlatılamadı', 'error');
+                console.error('TON Connect başlatma hatası:', error);
+                showNotification('TON Connect başlatılamadı', 'error');
             }
         }
 
-        // Cüzdan bağlantı işleyicisi
+        // Handle Wallet Connection
         function handleWalletConnection(wallet) {
-            try {
-                if (wallet) {
-                    gameState.walletConnected = true;
-                    const shortAddress = `${wallet.account.address.slice(0, 6)}...${wallet.account.address.slice(-4)}`;
-                    
-                    document.getElementById('connectButton').innerHTML = `
-                        <i class="fas fa-wallet"></i> ${shortAddress}
-                    `;
-                    document.getElementById('connectButton').classList.add('disabled');
-                    
-                    fetchWalletBalance(wallet.account.address);
-                    startGame();
-                    showNotification('Cüzdan bağlandı!', 'success');
-                } else {
-                    gameState.walletConnected = false;
-                    document.getElementById('connectButton').innerHTML = `
-                        <i class="fas fa-wallet"></i> Cüzdan Bağla
-                    `;
-                    document.getElementById('connectButton').classList.remove('disabled');
-                }
-            } catch (error) {
-                console.error('Wallet handling error:', error);
-                showNotification('Cüzdan bağlantısında hata', 'error');
-            }
-        }
-
-        // Cüzdan bağlantı fonksiyonu
-        async function connectWallet() {
-            try {
-                if (!tonConnectUI) {
-                    console.log('TonConnectUI yeniden başlatılıyor...');
-                    await initializeTonConnect();
-                    await new Promise(resolve => setTimeout(resolve, 1000));
-                }
+            if (wallet) {
+                gameState.walletConnected = true;
+                const shortAddress = `${wallet.account.address.slice(0, 6)}...${wallet.account.address.slice(-4)}`;
+                document.getElementById('connectButton').innerHTML = `
+                    <i class="fas fa-wallet"></i> ${shortAddress}
+                `;
+                document.getElementById('connectButton').classList.add('disabled');
                 
-                if (tonConnectUI) {
-                    await tonConnectUI.connectWallet();
-                } else {
-                    throw new Error('TonConnectUI başlatılamadı');
-                }
-            } catch (error) {
-                console.error('Wallet connection error:', error);
-                showNotification('Cüzdan bağlantısında hata', 'error');
+                fetchWalletBalance(wallet.account.address);
+                startGame();
+                showNotification('Cüzdan bağlandı!', 'success');
+            } else {
+                gameState.walletConnected = false;
+                resetGameState();
             }
         }
 
-        // Cüzdan bakiyesini alma
-        async function fetchWalletBalance(address) {
-            try {
-                const response = await fetch(`https://toncenter.com/api/v2/getAccount?address=${address}`);
-                const data = await response.json();
-                
-                if (data.ok) {
-                    gameState.tonBalance = parseFloat(data.result.balance) / 1e9;
-                    updateBalances();
-                }
-            } catch (error) {
-                console.error('Balance fetch error:', error);
-                showNotification('Bakiye güncellenemedi', 'error');
-            }
-        }
-
-        // Madencilik fonksiyonu
-        function mine() {
-            if (!gameState.walletConnected || gameState.miningCooldown) return;
-            if (gameState.energy < 10) {
+        // Mining Function
+        async function mine() {
+            if (!gameState.walletConnected || gameState.energy < 10) {
                 showNotification('Yetersiz enerji!', 'error');
                 return;
             }
 
-            gameState.miningCooldown = true;
+            const mineButton = document.getElementById('mineButton');
+            mineButton.disabled = true;
             gameState.energy -= 10;
-            updateEnergy();
+            updateEnergyDisplay();
 
-            const mineButton = document.getElementById('mineButton');
-            mineButton.classList.add('disabled');
-            mineButton.classList.add('mining-animation');
-
-            let progress = 0;
+            let miningTime = 3000 / gameState.miningPower;
             const progressBar = document.getElementById('miningProgress');
-            const progressInterval = setInterval(() => {
-                progress += 1;
-                progressBar.style.width = `${progress}%`;
-                if (progress >= 100) {
-                    clearInterval(progressInterval);
-                    completeMining();
-                }
-            }, gameState.cooldownTime * 10);
-        }
+            progressBar.style.width = '0%';
 
-        // Madencilik tamamlandığında
-        function completeMining() {
-            const baseReward = 0.1;
-            const workerBonus = gameState.workers * 0.02;
-            const mineBonus = gameState.mines * 0.05;
-            const equipmentBonus = (gameState.equipmentLevel - 1) * 0.1;
+            for (let i = 0; i <= 100; i++) {
+                await new Promise(resolve => setTimeout(resolve, miningTime / 100));
+                progressBar.style.width = `${i}%`;
+            }
+
+            const reward = calculateMiningReward();
+            gameState.tokenBalance += reward;
+            gameState.miningExp += 10;
+
+            checkMiningLevelUp();
+            updateBalances();
+            checkDailyQuests('MINE');
             
-            let totalReward = (baseReward + workerBonus + mineBonus) * (1 + equipmentBonus);
+            mineButton.disabled = false;
+            showNotification(`+${reward.toFixed(2)} GTOKEN kazanıldı!`, 'success');
 
-            // Kritik vuruş kontrolü
-            if (Math.random() * 100 < gameState.criticalChance) {
-                totalReward *= 2;
-                showNotification('Kritik Vuruş! 2x Bonus!', 'success');
-            }
-
-            gameState.tokenBalance += totalReward;
-            gameState.lastReward = totalReward;
-            gameState.experience += 10;
-
-            checkLevelUp();
-            updateStats();
-            updateBalances();
-
-            const mineButton = document.getElementById('mineButton');
-            mineButton.classList.remove('mining-animation');
-
-            showNotification(`+${totalReward.toFixed(2)} GTOKEN kazanıldı!`, 'success');
-            startCooldown();
-        }
-
-        // Level kontrolü
-        function checkLevelUp() {
-            const expNeeded = gameState.playerLevel * 100;
-            if (gameState.experience >= expNeeded) {
-                gameState.playerLevel++;
-                gameState.experience = 0;
-                gameState.criticalChance += 1;
-                showAchievement(`Seviye ${gameState.playerLevel}'e ulaştınız!`);
-                document.getElementById('playerLevel').textContent = gameState.playerLevel;
+            // NFT drop chance
+            if (Math.random() < 0.05) { // 5% chance
+                const nft = generateRandomNFT();
+                gameState.nftCollection.push(nft);
+                showNotification(`Tebrikler! ${nft.rarity} NFT buldunuz!`, 'success');
+                updateNFTCollection();
             }
         }
 
-        // Bekleme süresi
-        function startCooldown() {
-            let timeLeft = gameState.cooldownTime;
-            const cooldownInterval = setInterval(() => {
-                timeLeft--;
-                document.getElementById('cooldown').textContent = timeLeft;
+        // Equipment Upgrade
+        function upgradeEquipment(type) {
+            const equipment = gameState.equipment[type];
+            const cost = equipment.level * 5;
 
-                if (timeLeft <= 0) {
-                    clearInterval(cooldownInterval);
-                    gameState.miningCooldown = false;
-                    document.getElementById('mineButton').classList.remove('disabled');
-                    document.getElementById('miningProgress').style.width = '0%';
-                    regenerateEnergy();
-                }
-            }, 1000);
-        }
-
-        // Enerji yenileme
-        function regenerateEnergy() {
-            if (gameState.energy < 100) {
-                gameState.energy += 20;
-                if (gameState.energy > 100) gameState.energy = 100;
-                updateEnergy();
-            }
-        }
-
-        // Enerji güncelleme
-        function updateEnergy() {
-            document.getElementById('energyLevel').textContent = `${gameState.energy}%`;
-        }
-
-        // Ekipman geliştirme
-        function upgradeEquipment() {
-            if (!gameState.walletConnected) {
-                showNotification('Lütfen önce cüzdanınızı bağlayın!', 'error');
-                return;
-            }
-
-            const cost = 3;
-            if (gameState.tonBalance >= cost) {
-                gameState.tonBalance -= cost;
-                gameState.equipmentLevel++;
-                gameState.miningPower = 1 + (gameState.equipmentLevel - 1) * 0.1;
+            if (gameState.tokenBalance >= cost) {
+                gameState.tokenBalance -= cost;
+                equipment.level++;
                 
-                updateStats();
+                if (type === 'pickaxe') {
+                    equipment.power = 1 + (equipment.level - 1) * 0.1;
+                    gameState.miningPower = calculateTotalMiningPower();
+                } else {
+                    equipment.defense = 1 + (equipment.level - 1) * 0.1;
+                }
+
+                updateEquipmentDisplay();
                 updateBalances();
-                showNotification('Ekipman geliştirildi!', 'success');
+                checkDailyQuests('UPGRADE');
+                showNotification(`${type} seviye ${equipment.level}'e yükseltildi!`, 'success');
             } else {
-                showNotification('Yetersiz TON bakiyesi!', 'error');
+                showNotification('Yetersiz token!', 'error');
             }
         }
 
-        // İşçi satın alma
-        function buyWorker() {
-            if (!gameState.walletConnected) {
-                showNotification('Lütfen önce cüzdanınızı bağlayın!', 'error');
-                return;
-            }
-
-            if (gameState.tonBalance >= 1) {
-                gameState.tonBalance -= 1;
-                gameState.workers += 1;
-                gameState.hourlyIncome += 0.2;
-                updateStats();
-                updateBalances();
-                showNotification('Yeni işçi işe alındı!', 'success');
-                checkAchievements();
-            } else {
-                showNotification('Yetersiz TON bakiyesi!', 'error');
-            }
+        // Daily Quests
+        function initializeDailyQuests() {
+            gameState.dailyQuests = dailyQuestTemplates.map(template => ({
+                ...template,
+                progress: 0,
+                completed: false
+            }));
+            updateDailyQuestsDisplay();
         }
 
-        // Maden satın alma
-        function buyMine() {
-            if (!gameState.walletConnected) {
-                showNotification('Lütfen önce cüzdanınızı bağlayın!', 'error');
-                return;
-            }
-
-            if (gameState.tonBalance >= 2) {
-                gameState.tonBalance -= 2;
-                gameState.mines += 1;
-                gameState.hourlyIncome += 0.5;
-                updateStats();
-                updateBalances();
-                showNotification('Yeni maden satın alındı!', 'success');
-                checkAchievements();
-            } else {
-                showNotification('Yetersiz TON bakiyesi!', 'error');
-            }
-        }
-
-        // Token stake etme
-        function stakeTokens() {
-            const amount = parseFloat(document.getElementById('stakeAmount').value);
-            if (isNaN(amount) || amount <= 0) {
-                showNotification('Geçerli bir miktar girin!', 'error');
-                return;
-            }
-
-            if (amount > gameState.tokenBalance) {
-                showNotification('Yetersiz token bakiyesi!', 'error');
-                return;
-            }
-
-            gameState.tokenBalance -= amount;
-            gameState.stakedAmount += amount;
-            updateStakeInfo();
-            showNotification(`${amount} GTOKEN stake edildi!`, 'success');
-        }
-
-        // Stake ödüllerini toplama
-        function claimRewards() {
-            if (gameState.stakeRewards <= 0) {
-                showNotification('Toplanacak ödül yok!', 'error');
-                return;
-            }
-
-            gameState.tokenBalance += gameState.stakeRewards;
-            gameState.stakeRewards = 0;
-            updateStakeInfo();
-            updateBalances();
-            showNotification('Stake ödülleri toplandı!', 'success');
-        }
-
-        // Stake bilgilerini güncelleme
-        function updateStakeInfo() {
-            document.getElementById('stakedAmount').textContent = gameState.stakedAmount.toFixed(2);
-            document.getElementById('stakeRewards').textContent = gameState.stakeRewards.toFixed(2);
-            document.getElementById('stakeDuration').textContent = `${gameState.stakeDuration} gün`;
-        }
-
-        // Başarım kontrolü
-        function checkAchievements() {
-            achievements.forEach(achievement => {
-                if (!gameState.achievements.includes(achievement.id)) {
-                    let completed = false;
-                    switch (achievement.id) {
-                        case 1:
-                            completed = gameState.lastReward > 0;
-                            break;
-                        case 2:
-                            completed = gameState.workers >= 5;
-                            break;
-                        case 3:
-                            completed = gameState.mines >= 10;
-                            break;
-                        case 4:
-                            completed = gameState.stakedAmount >= 100;
-                            break;
+        function checkDailyQuests(type) {
+            gameState.dailyQuests.forEach(quest => {
+                if (quest.type === type && !quest.completed) {
+                    quest.progress++;
+                    if (quest.progress >= quest.target) {
+                        quest.completed = true;
+                        gameState.tokenBalance += quest.reward;
+                        showNotification(`Günlük görev tamamlandı! +${quest.reward} GTOKEN`, 'success');
                     }
-
-                    if (completed) {
-                        gameState.achievements.push(achievement.id);
-                        gameState.tokenBalance += achievement.reward;
-                        showAchievement(`Başarım: ${achievement.name} (+${achievement.reward} GTOKEN)`);
-                    }
+                    updateDailyQuestsDisplay();
                 }
             });
         }
 
-        // Bildirim gösterme
+        // Utility Functions
+        function calculateMiningReward() {
+            const baseReward = 1;
+            const powerMultiplier = gameState.miningPower;
+            const nftMultiplier = calculateNFTBonus();
+            return baseReward * powerMultiplier * nftMultiplier;
+        }
+
+        function calculateNFTBonus() {
+            return gameState.nftCollection.reduce((bonus, nft) => {
+                return bonus + (nft.multiplier - 1);
+            }, 1);
+        }
+
+        function generateRandomNFT() {
+            const rand = Math.random();
+            let rarity;
+            
+            if (rand < nftTypes.LEGENDARY.dropRate) rarity = 'LEGENDARY';
+            else if (rand < nftTypes.EPIC.dropRate) rarity = 'EPIC';
+            else if (rand < nftTypes.RARE.dropRate) rarity = 'RARE';
+            else rarity = 'COMMON';
+
+            return {
+                id: Date.now(),
+                rarity,
+                multiplier: nftTypes[rarity].multiplier
+            };
+        }
+
+        // Display Updates
+        function updateBalances() {
+            document.getElementById('tokenBalance').textContent = gameState.tokenBalance.toFixed(2);
+            document.getElementById('tonBalance').textContent = gameState.tonBalance.toFixed(2);
+        }
+
+        function updateMiningDisplay() {
+            document.getElementById('miningPower').textContent = `${gameState.miningPower.toFixed(1)}x`;
+            document.getElementById('energy').textContent = `${gameState.energy}/${gameState.maxEnergy}`;
+            
+            // Level progress
+            const levelProgress = document.getElementById('miningLevelProgress');
+            const expNeeded = gameState.miningLevel * 100;
+            const progress = (gameState.miningExp / expNeeded) * 100;
+            levelProgress.style.width = `${progress}%`;
+        }
+
+        function updateDailyQuestsDisplay() {
+            const container = document.getElementById('dailyQuests');
+            container.innerHTML = gameState.dailyQuests.map(quest => `
+                <div class="daily-quest">
+                    <div>
+                        <h4>${quest.description}</h4>
+                        <p>İlerleme: ${quest.progress}/${quest.target}</p>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress" style="width: ${(quest.progress / quest.target) * 100}%"></div>
+                    </div>
+                    <div>
+                        <span>${quest.reward} GTOKEN</span>
+                        ${quest.completed ? '<i class="fas fa-check-circle"></i>' : ''}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function updateNFTCollection() {
+            const container = document.getElementById('nftCollection');
+            if (!container) return;
+
+            container.innerHTML = gameState.nftCollection.map(nft => `
+                <div class="nft-card ${nft.rarity.toLowerCase()}">
+                    <div class="nft-image">
+                        <i class="fas fa-gem fa-3x"></i>
+                    </div>
+                    <h3>${nft.rarity}</h3>
+                    <p>${nft.multiplier}x Bonus</p>
+                </div>
+            `).join('');
+        }
+
+        function updateEquipmentDisplay() {
+            const types = ['pickaxe', 'helmet', 'armor'];
+            types.forEach(type => {
+                const equipment = gameState.equipment[type];
+                const slot = document.getElementById(`${type}Slot`);
+                if (slot) {
+                    slot.querySelector('span').textContent = 
+                        `${type.charAt(0).toUpperCase() + type.slice(1)} (Lvl ${equipment.level})`;
+                }
+            });
+        }
+
+        // Game Progression
+        function checkMiningLevelUp() {
+            const expNeeded = gameState.miningLevel * 100;
+            if (gameState.miningExp >= expNeeded) {
+                gameState.miningLevel++;
+                gameState.miningExp = 0;
+                gameState.miningPower += 0.1;
+                showNotification(`Madencilik seviyesi ${gameState.miningLevel}'e yükseldi!`, 'success');
+                updateMiningDisplay();
+            }
+        }
+
+        function startEnergyRegeneration() {
+            setInterval(() => {
+                if (gameState.energy < gameState.maxEnergy) {
+                    gameState.energy = Math.min(gameState.maxEnergy, gameState.energy + gameState.energyRegen);
+                    updateMiningDisplay();
+                }
+            }, 10000); // Her 10 saniyede bir enerji yenilenir
+        }
+
+        // Guild System
+        function createGuild(name) {
+            if (gameState.tokenBalance >= 1000) {
+                gameState.tokenBalance -= 1000;
+                gameState.guild = {
+                    name,
+                    level: 1,
+                    exp: 0,
+                    members: [{
+                        address: wallet.account.address,
+                        role: 'LEADER',
+                        contribution: 0
+                    }],
+                    missions: generateGuildMissions()
+                };
+                updateGuildDisplay();
+                showNotification('Lonca kuruldu!', 'success');
+            } else {
+                showNotification('Lonca kurmak için 1000 GTOKEN gerekli!', 'error');
+            }
+        }
+
+        function generateGuildMissions() {
+            return [
+                {
+                    type: 'MINING',
+                    description: 'Lonca üyeleri toplam 1000 token kazansın',
+                    target: 1000,
+                    progress: 0,
+                    reward: 100
+                },
+                {
+                    type: 'UPGRADE',
+                    description: 'Lonca üyeleri toplam 10 ekipman geliştirsin',
+                    target: 10,
+                    progress: 0,
+                    reward: 150
+                }
+            ];
+        }
+
+        // NFT Market
+        function loadNFTMarket() {
+            const container = document.getElementById('nftMarket');
+            if (!container) return;
+
+            const nftOffers = [
+                { rarity: 'LEGENDARY', price: 1000 },
+                { rarity: 'EPIC', price: 500 },
+                { rarity: 'RARE', price: 200 },
+                { rarity: 'COMMON', price: 50 }
+            ];
+
+            container.innerHTML = nftOffers.map(offer => `
+                <div class="nft-card ${offer.rarity.toLowerCase()}">
+                    <div class="nft-image">
+                        <i class="fas fa-gem fa-3x"></i>
+                    </div>
+                    <h3>${offer.rarity}</h3>
+                    <p>${nftTypes[offer.rarity].multiplier}x Bonus</p>
+                    <button onclick="buyNFT('${offer.rarity}', ${offer.price})" class="button">
+                        ${offer.price} GTOKEN ile Satın Al
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        function buyNFT(rarity, price) {
+            if (gameState.tokenBalance >= price) {
+                gameState.tokenBalance -= price;
+                const nft = {
+                    id: Date.now(),
+                    rarity,
+                    multiplier: nftTypes[rarity].multiplier
+                };
+                gameState.nftCollection.push(nft);
+                updateNFTCollection();
+                updateBalances();
+                showNotification(`${rarity} NFT satın alındı!`, 'success');
+            } else {
+                showNotification('Yetersiz token!', 'error');
+            }
+        }
+
+        // UI Helpers
         function showNotification(message, type = 'info') {
             const notification = document.createElement('div');
             notification.className = `notification ${type}`;
             notification.innerHTML = `
-                <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
+                <i class="fas fa-${type === 'success' ? 'check-circle' : 
+                               type === 'error' ? 'exclamation-circle' : 
+                               'info-circle'}"></i>
                 ${message}
             `;
             document.body.appendChild(notification);
-
-            setTimeout(() => {
-                notification.remove();
-            }, 3000);
+            setTimeout(() => notification.remove(), 3000);
         }
 
-        // Başarım gösterme
-        function showAchievement(message) {
-            const achievement = document.createElement('div');
-            achievement.className = 'achievement';
-            achievement.innerHTML = `
-                <i class="fas fa-trophy"></i>
-                ${message}
-            `;
-            document.body.appendChild(achievement);
+        function switchTab(tabName) {
+            const tabs = ['miningTab', 'guildTab', 'nftTab'];
+            tabs.forEach(tab => {
+                document.getElementById(tab).style.display = 
+                    tab === `${tabName}Tab` ? 'grid' : 'none';
+            });
 
-            setTimeout(() => {
-                achievement.remove();
-            }, 5000);
+            if (tabName === 'nft') {
+                loadNFTMarket();
+            }
         }
 
-        // Bakiye güncelleme
-        function updateBalances() {
-            document.getElementById('tokenBalance').textContent = gameState.tokenBalance.toFixed(2);
-            document.getElementById('tonBalance').textContent = gameState.tonBalance.toFixed(2);
-            document.getElementById('minedAmount').textContent = gameState.lastReward.toFixed(2);
-            document.getElementById('swapAmount').textContent = gameState.tokenBalance.toFixed(2);
-        }
-
-        // İstatistik güncelleme
-        function updateStats() {
-            document.getElementById('workerCount').textContent = gameState.workers;
-            document.getElementById('mineCount').textContent = gameState.mines;
-            document.getElementById('hourlyIncome').textContent = gameState.hourlyIncome.toFixed(2);
-            document.getElementById('totalWorkers').textContent = gameState.workers;
-            document.getElementById('totalMines').textContent = gameState.mines;
-            document.getElementById('equipmentLevel').textContent = gameState.equipmentLevel;
-            document.getElementById('miningPower').textContent = `${gameState.miningPower.toFixed(1)}x`;
-            document.getElementById('criticalChance').textContent = `${gameState.criticalChance}%`;
-        }
-
-        // Otomatik madencilik (işçiler için)
-        function startAutoMining() {
-            setInterval(() => {
-                if (gameState.workers > 0) {
-                    const workerReward = (gameState.hourlyIncome / 3600);
-                    gameState.tokenBalance += workerReward;
-                    updateBalances();
-                }
-            }, 1000);
-
-            // Stake ödüllerini hesapla
-            setInterval(() => {
-                if (gameState.stakedAmount > 0) {
-                    const dailyReward = (gameState.stakedAmount * 0.25) / 365;
-                    gameState.stakeRewards += dailyReward / 24;
-                    gameState.stakeDuration++;
-                    updateStakeInfo();
-                }
-            }, 3600000); // Her saat
-        }
-
-        // Oyunu başlat
-        function startGame() {
+        // Initialize Game
+        async function startGame() {
             updateBalances();
-            updateStats();
-            updateStakeInfo();
-            startAutoMining();
-            checkAchievements();
-        }
-
-        // Modal kontrolü
-        function openModal(modalId) {
-            document.getElementById(modalId).style.display = 'block';
-        }
-
-        function closeModal(modalId) {
-            document.getElementById(modalId).style.display = 'none';
+            updateMiningDisplay();
+            updateEquipmentDisplay();
+            initializeDailyQuests();
+            startEnergyRegeneration();
         }
 
         // Event Listeners
-        document.getElementById('connectButton').addEventListener('click', connectWallet);
         document.getElementById('mineButton').addEventListener('click', mine);
+        document.getElementById('connectButton').addEventListener('click', connectWallet);
 
-        // Sayfa yüklendiğinde
+        // Initialize on load
         window.addEventListener('load', async () => {
             try {
                 await initializeTonConnect();
-                showNotification('Oyun yüklendi!', 'success');
+                showNotification('Oyun yüklendi! Cüzdanınızı bağlayın.', 'info');
             } catch (error) {
-                console.error('Initial TonConnect load error:', error);
-            }
-        });
-
-        // ESC tuşu ile modalları kapat
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') {
-                document.querySelectorAll('.modal').forEach(modal => {
-                    modal.style.display = 'none';
-                });
+                console.error('Game initialization error:', error);
+                showNotification('Oyun başlatılırken hata oluştu!', 'error');
             }
         });
     </script>
