@@ -1,7 +1,7 @@
 {
-    "url": "https://cryptominergames.netlify.app/",
-    "name": "CryptoMinerGames Wallet App",
-    "iconUrl": "https://ton.org/download/ton_symbol.png",
-    "manifestVersion": "0.3",
-    "bridgeUrl": "https://bridge.tonapi.io/bridge"
+    "url": "https://cryptominergames.netlify.app",
+    "name": "CryptoMinerGames",
+    "iconUrl": "https://cryptominergames.netlify.app/icon.png",
+    "termsOfUseUrl": "https://cryptominergames.netlify.app/terms",
+    "privacyPolicyUrl": "https://cryptominergames.netlify.app/privacy"
 }
