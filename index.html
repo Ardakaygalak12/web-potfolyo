@@ -3,7 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <title>TON Wallet Connect</title>
+    <script src="https://unpkg.com/@tonconnect/sdk@latest/dist/tonconnect-sdk.min.js"></script>
     <style>
         body {
             margin: 0;
@@ -50,6 +52,7 @@
         #status {
             color: #fff;
             margin-top: 15px;
+            word-break: break-all;
         }
     </style>
 </head>
@@ -63,43 +66,56 @@
     </div>
 
     <script>
-        function connectWallet() {
+        // Manifest URL'i direkt olarak tanımlayalım
+        const manifestContent = {
+            url: 'https://testsiteton.netlify.app',
+            name: 'TON Connect Test',
+            iconUrl: 'https://testsiteton.netlify.app/icon.png'
+        };
+
+        // Base64 encode manifest
+        const manifestBase64 = btoa(JSON.stringify(manifestContent));
+
+        async function connectWallet() {
             try {
-                // TON Wallet protokolü için özel URI
-                const tonConnectUrl = `ton://connect/v2?r=https://testsiteton.netlify.app&v=2`;
-                
-                // Mobil/Desktop kontrolü
+                document.getElementById('status').textContent = 'Cüzdan bağlanıyor...';
+
                 const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-                
+                const connectUrl = `https://t.me/wallet?startattach=tonconnect-` + manifestBase64;
+
                 if (isMobile) {
-                    // Mobil için Telegram deep link
-                    window.location.href = `https://t.me/wallet?attach=wallet&connect=v2&r=https://testsiteton.netlify.app`;
+                    window.location.href = connectUrl;
                 } else {
-                    // Desktop için Telegram URI şeması
-                    window.location.href = `tg://resolve?domain=wallet&startapp=wallet&connect=v2&r=https://testsiteton.netlify.app`;
+                    window.location.href = `tg://resolve?domain=wallet&startattach=tonconnect-` + manifestBase64;
                 }
 
-                document.getElementById('status').textContent = 'Cüzdan açılıyor...';
-
-                // Bağlantı durumunu kontrol et
-                checkConnectionStatus();
+                // Bağlantı durumunu dinle
+                checkConnection();
             } catch (error) {
-                document.getElementById('status').textContent = 'Bağlantı hatası: ' + error.message;
+                document.getElementById('status').textContent = 'Hata: ' + error.message;
+                console.error('Bağlantı hatası:', error);
             }
         }
 
-        function checkConnectionStatus() {
-            // URL parametrelerini kontrol et
+        function checkConnection() {
+            // URL'den tonconnect parametrelerini kontrol et
             const urlParams = new URLSearchParams(window.location.search);
-            const address = urlParams.get('address');
-            
-            if (address) {
-                document.getElementById('status').textContent = `Cüzdan bağlandı! Adres: ${address}`;
+            if (urlParams.has('tonconnect')) {
+                const walletInfo = urlParams.get('tonconnect');
+                try {
+                    const decodedInfo = JSON.parse(atob(walletInfo));
+                    if (decodedInfo.address) {
+                        document.getElementById('status').textContent = 
+                            'Cüzdan bağlandı! Adres: ' + decodedInfo.address;
+                    }
+                } catch (e) {
+                    console.error('Wallet info decode error:', e);
+                }
             }
         }
 
         // Sayfa yüklendiğinde bağlantı durumunu kontrol et
-        window.onload = checkConnectionStatus;
+        window.addEventListener('load', checkConnection);
     </script>
 </body>
 </html>
