@@ -3,93 +3,57 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TonKeeper Connect (SDK)</title>
+    <title>Ton Connect SDK Bağlantısı</title>
     <script src="https://cdn.jsdelivr.net/npm/@tonconnect/sdk@latest/dist/tonconnect-sdk.min.js"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Roboto, sans-serif;
-        }
-
         body {
+            font-family: Arial, sans-serif;
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
-            background: #f5f5f5;
+            margin: 0;
+            background-color: #f8f8f8;
         }
-
-        .wallet-container {
-            text-align: center;
+        .container {
+            background-color: white;
             padding: 20px;
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            width: 320px;
-        }
-
-        .connect-button {
-            background: #0088CC;
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: 0.3s;
-            width: 100%;
-            margin-bottom: 12px;
-        }
-
-        .connect-button:hover {
-            background: #006699;
-        }
-
-        .wallet-info {
-            display: none;
-            margin-top: 20px;
-            background: #f8f9fa;
-            padding: 12px;
-            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
             text-align: center;
+            width: 350px;
         }
-
-        .wallet-address {
-            font-family: monospace;
-            color: #333;
-            font-size: 14px;
-        }
-
-        .disconnect-button {
-            background: #ff4444;
-            color: white;
+        button {
+            padding: 10px 20px;
+            margin: 10px 0;
             border: none;
-            padding: 10px;
-            border-radius: 6px;
+            border-radius: 5px;
             cursor: pointer;
-            margin-top: 10px;
-            width: 100%;
         }
-
-        .disconnect-button:hover {
-            background: #cc0000;
+        #connectButton {
+            background-color: #0088cc;
+            color: white;
+        }
+        #disconnectButton {
+            background-color: #ff4444;
+            color: white;
+        }
+        #walletInfo {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #e6f7ff;
+            border: 1px solid #91d5ff;
+            border-radius: 5px;
         }
     </style>
 </head>
 <body>
-    <div class="wallet-container">
-        <h1>TonKeeper Bağlantısı</h1>
-
-        <!-- Bağlan ve Bilgi Alanı -->
-        <button class="connect-button" id="connectButton">TonKeeper ile Bağlan</button>
-
-        <div class="wallet-info" id="walletInfo">
-            <p>Cüzdan Adresi:</p>
-            <p class="wallet-address" id="walletAddress"></p>
-            <button class="disconnect-button" id="disconnectButton">Bağlantıyı Kes</button>
+    <div class="container">
+        <h1>Ton Cüzdan Bağlantısı</h1>
+        <button id="connectButton">Cüzdana Bağlan</button>
+        <div id="walletInfo" style="display:none;">
+            <p><strong>Bağlı Cüzdan:</strong> <span id="walletAddress"></span></p>
+            <button id="disconnectButton">Bağlantıyı Kes</button>
         </div>
     </div>
 
@@ -98,41 +62,45 @@
             manifestUrl: "https://cryptominergames.netlify.app/tonconnect-manifest.json"
         });
 
-        const connectButton = document.getElementById('connectButton');
-        const walletInfo = document.getElementById('walletInfo');
-        const walletAddress = document.getElementById('walletAddress');
-        const disconnectButton = document.getElementById('disconnectButton');
+        const connectButton = document.getElementById("connectButton");
+        const disconnectButton = document.getElementById("disconnectButton");
+        const walletInfo = document.getElementById("walletInfo");
+        const walletAddress = document.getElementById("walletAddress");
 
-        // Cüzdanı Bağla
-        connectButton.addEventListener('click', async () => {
+        async function connectWallet() {
             try {
-                const walletConnection = await tonConnect.connectWallet();
-                const address = walletConnection?.account?.address;
-                if (address) {
-                    walletAddress.textContent = address;
-                    walletInfo.style.display = 'block';
-                    connectButton.style.display = 'none';
+                const connection = await tonConnect.connectWallet();
+                if (connection?.account?.address) {
+                    walletAddress.innerText = connection.account.address;
+                    walletInfo.style.display = "block";
+                    connectButton.style.display = "none";
+                } else {
+                    alert("Cüzdan adresi alınamadı.");
                 }
             } catch (error) {
-                alert('Bağlantı hatası: ' + error.message);
+                console.error("Bağlantı hatası:", error);
+                alert("Cüzdan bağlanırken hata oluştu. Cüzdanınızın yüklü olduğundan ve izin verdiğinizden emin olun.");
             }
-        });
+        }
 
-        // Bağlantıyı Kes
-        disconnectButton.addEventListener('click', () => {
+        function disconnectWallet() {
             tonConnect.disconnect();
-            walletInfo.style.display = 'none';
-            connectButton.style.display = 'block';
-            walletAddress.textContent = '';
-        });
+            walletInfo.style.display = "none";
+            connectButton.style.display = "block";
+            walletAddress.innerText = "";
+        }
 
-        // Sayfa Yüklendiğinde Bağlantı Kontrolü
-        window.addEventListener('load', async () => {
+        // Olayları dinle
+        connectButton.addEventListener("click", connectWallet);
+        disconnectButton.addEventListener("click", disconnectWallet);
+
+        // Sayfa yüklenirken bağlantıyı kontrol et
+        window.addEventListener("load", async () => {
             const isConnected = await tonConnect.restoreConnection();
             if (isConnected && tonConnect.account) {
-                walletAddress.textContent = tonConnect.account.address;
-                walletInfo.style.display = 'block';
-                connectButton.style.display = 'none';
+                walletAddress.innerText = tonConnect.account.address;
+                walletInfo.style.display = "block";
+                connectButton.style.display = "none";
             }
         });
     </script>
