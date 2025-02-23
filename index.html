@@ -39,12 +39,6 @@
         color: white;
       }
 
-      .header img {
-        width: 80px;
-        height: 80px;
-        margin-bottom: 15px;
-      }
-
       .connect-button {
         display: flex;
         align-items: center;
@@ -65,45 +59,99 @@
 
       .connect-button:hover {
         background: #1C8AC0;
-        transform: translateY(-2px);
       }
 
-      .connect-button img {
-        width: 24px;
-        height: 24px;
+      #status {
+        color: white;
+        margin-top: 20px;
+      }
+
+      #walletInfo {
+        color: white;
+        margin-top: 20px;
+        word-break: break-all;
+        display: none;
       }
     </style>
   </head>
   <body>
     <div class="container">
       <div class="header">
-        <img src="https://telegram.org/img/t_logo.svg" alt="Telegram Logo">
         <h1>Telegram TON Wallet</h1>
         <p>Cüzdanınızı bağlamak için tıklayın</p>
       </div>
 
       <button class="connect-button" onclick="connectWallet()">
-        <img src="https://ton.org/assets/logo.svg" alt="TON Logo">
-        Cüzdanı Bağla
+        Telegram Cüzdanı Bağla
       </button>
+
+      <div id="status"></div>
+      <div id="walletInfo"></div>
     </div>
 
-    <script src="https://unpkg.com/@tonconnect/sdk@latest/dist/tonconnect-sdk.min.js"></script>
+    <script src="https://unpkg.com/@tonconnect/sdk@2.1.3/dist/tonconnect-sdk.min.js"></script>
     <script>
-      const connector = new TonConnectSDK.TonConnect({
-        manifestUrl: "https://testsiteton.netlify.app/tonconnect-manifest.json"
-      });
+      let connector;
 
-      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-
-      const connectWallet = async () => {
-        try {
-          const universalLink = "https://t.me/wallet/start?startapp=";
-          window.location.href = universalLink;
-        } catch (error) {
-          console.error('Connection error:', error);
+      async function initTonConnect() {
+        connector = new TonConnectSDK.TonConnect({
+          manifestUrl: 'https://testsiteton.netlify.app/tonconnect-manifest.json'
+        });
+        
+        // Bağlantı durumunu dinle
+        connector.onStatusChange(handleStatusChange);
+        
+        // Mevcut bağlantıyı kontrol et
+        const walletInfo = await connector.getWalletInfo();
+        if (walletInfo) {
+          handleStatusChange(walletInfo);
         }
-      };
+      }
+
+      async function connectWallet() {
+        try {
+          document.getElementById('status').textContent = 'Bağlanıyor...';
+          
+          // Telegram Wallet için özel bağlantı kaynağı
+          const walletConnectionSource = {
+            jsBridgeKey: 'tonconnect', // Telegram için önemli
+            universalLink: 'https://t.me/wallet',
+            bridgeUrl: 'https://bridge.tonapi.io/bridge'
+          };
+
+          // Bağlantı URL'sini oluştur
+          const universalLink = connector.connect(walletConnectionSource);
+
+          // Mobil/Desktop kontrolü
+          if (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+            window.location.href = `${walletConnectionSource.universalLink}/start?startapp=tonconnect`;
+          } else {
+            window.location.href = `${walletConnectionSource.universalLink}?startapp=tonconnect`;
+          }
+
+        } catch (error) {
+          document.getElementById('status').textContent = 'Bağlantı hatası: ' + error.message;
+          console.error('Bağlantı hatası:', error);
+        }
+      }
+
+      function handleStatusChange(wallet) {
+        if (wallet) {
+          const walletInfo = document.getElementById('walletInfo');
+          walletInfo.style.display = 'block';
+          walletInfo.innerHTML = `
+            <h3>Cüzdan Bağlandı!</h3>
+            <p>Adres: ${wallet.account.address}</p>
+          `;
+          document.getElementById('status').textContent = 'Bağlantı başarılı!';
+        } else {
+          document.getElementById('walletInfo').style.display = 'none';
+          document.getElementById('status').textContent = '';
+        }
+      }
+
+      // Sayfa yüklendiğinde TonConnect'i başlat
+      window.addEventListener('load', initTonConnect);
     </script>
   </body>
 </html>
