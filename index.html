@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TON Connect</title>
+    <title>TON Wallet Connect</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         body {
             margin: 0;
@@ -12,23 +13,21 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            background: linear-gradient(135deg, #0088cc, #004466);
+            background: #1c1c1c;
             font-family: Arial, sans-serif;
         }
 
         .container {
-            background: rgba(255, 255, 255, 0.1);
+            background: #2c2c2c;
             padding: 30px;
             border-radius: 20px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-            backdrop-filter: blur(10px);
             max-width: 400px;
             width: 100%;
             text-align: center;
         }
 
         .connect-button {
-            background: #229ED9;
+            background: #31a6f5;
             color: white;
             border: none;
             padding: 15px 30px;
@@ -41,12 +40,7 @@
         }
 
         .connect-button:hover {
-            background: #1C8AC0;
-        }
-
-        #status {
-            color: white;
-            margin-top: 20px;
+            background: #2b95dd;
         }
 
         .title {
@@ -57,54 +51,32 @@
 </head>
 <body>
     <div class="container">
-        <h2 class="title">Telegram TON Wallet</h2>
+        <h2 class="title">TON Wallet</h2>
         <button class="connect-button" onclick="connectWallet()">
-            Cüzdanı Bağla
+            Telegram Cüzdanını Bağla
         </button>
-        <div id="status"></div>
     </div>
 
-    <script src="https://unpkg.com/@tonconnect/sdk@latest/dist/tonconnect-sdk.min.js"></script>
     <script>
-        // TON Connect'i başlat
-        const connector = new TonConnectSDK.TonConnect({
-            manifestUrl: 'https://testsiteton.netlify.app/tonconnect-manifest.json'
-        });
-
-        async function connectWallet() {
-            try {
-                // Telegram Wallet için bağlantı kaynağı
-                const walletConnectionSource = {
-                    jsBridgeKey: 'tonconnect',
-                    universalLink: 'https://t.me/wallet',
-                    bridgeUrl: 'https://bridge.tonapi.io/bridge'
-                };
-
-                // Mobil kontrolü
-                const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-                
-                if (isMobile) {
-                    // Mobil cihazlar için
-                    window.location.href = 'https://t.me/wallet/start?startapp=tonconnect-manifest';
-                } else {
-                    // Masaüstü için
-                    window.location.href = 'tg://resolve?domain=wallet&startapp=tonconnect-manifest';
-                }
-
-            } catch (error) {
-                document.getElementById('status').innerText = 'Bağlantı hatası oluştu';
-                console.error('Bağlantı hatası:', error);
-            }
+        function connectWallet() {
+            // Direkt Telegram Wallet'a yönlendir
+            const deepLink = 'https://t.me/wallet?startapp=wallet';
+            window.location.href = deepLink;
         }
 
-        // Bağlantı durumunu dinle
-        connector.onStatusChange((wallet) => {
-            if (wallet) {
-                document.getElementById('status').innerText = 'Cüzdan bağlandı: ' + wallet.account.address;
-            } else {
-                document.getElementById('status').innerText = '';
-            }
-        });
+        // Telegram WebApp API'si hazır olduğunda
+        window.Telegram.WebApp.ready();
+
+        // Ana uygulamaya genişlet
+        window.Telegram.WebApp.expand();
+
+        // Tema renklerini uygula
+        const colorScheme = window.Telegram.WebApp.colorScheme;
+        if (colorScheme === 'dark') {
+            document.body.style.background = '#1c1c1c';
+        } else {
+            document.body.style.background = '#ffffff';
+        }
     </script>
 </body>
 </html>
