@@ -3,80 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TON Faucet</title>
-    <script src="https://cdn.jsdelivr.net/npm/@tonconnect/sdk@latest"></script>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            padding: 20px;
-            background-color: #f0f0f0;
-        }
-        button {
-            padding: 10px 20px;
-            font-size: 16px;
-            margin: 10px;
-            cursor: pointer;
-        }
-    </style>
+    <title>TON Cüzdan Bağlantısı</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tonconnect/sdk@2.0.0/dist/tonconnect.min.js"></script>
 </head>
 <body>
-    <h1>TON Faucet</h1>
-    <div id="walletInfo"></div>
+    <h1>TON Faucet Cüzdan Bağlantısı</h1>
     <button id="connectBtn">Cüzdanı Bağla</button>
-    <button id="disconnectBtn" style="display:none;">Bağlantıyı Kes</button>
+    <p id="walletAddress"></p>
 
-    <script>
-        let tonConnect;
-        try {
-            tonConnect = new TonConnect({ manifestUrl: 'https://testsiteton.netlify.app/tonconnect-manifest.json' });
-        } catch (error) {
-            console.error("TonConnect başlatma hatası:", error.message || error);
-        }
-
-        const walletInfoDiv = document.getElementById("walletInfo");
-        const connectBtn = document.getElementById("connectBtn");
-        const disconnectBtn = document.getElementById("disconnectBtn");
-
-        async function connectWallet() {
-            if (!tonConnect) {
-                alert("TonConnect başlatılamadı.");
-                return;
-            }
-
-            try {
-                const wallets = await tonConnect.getWallets();
-                if (!wallets || wallets.length === 0) throw new Error("Hiçbir cüzdan bulunamadı.");
-
-                const link = await tonConnect.connect({
-                    universalLink: wallets[0].universalLink,
-                    returnStrategy: 'back'
-                });
-                window.open(link, '_blank');
-
-                const walletInfo = await tonConnect.restoreConnection();
-                if (walletInfo) {
-                    walletInfoDiv.innerHTML = `Cüzdan Bağlı: ${walletInfo.account?.address}`;
-                    connectBtn.style.display = 'none';
-                    disconnectBtn.style.display = 'inline-block';
-                }
-            } catch (error) {
-                console.error("Cüzdan bağlama hatası:", error.message || error);
-                alert(`Cüzdan bağlama hatası: ${error.message || error}`);
-            }
-        }
-
-        function disconnectWallet() {
-            if (tonConnect) {
-                tonConnect.disconnect();
-                walletInfoDiv.innerHTML = '';
-                connectBtn.style.display = 'inline-block';
-                disconnectBtn.style.display = 'none';
-            }
-        }
-
-        connectBtn.addEventListener("click", connectWallet);
-        disconnectBtn.addEventListener("click", disconnectWallet);
-    </script>
+    <script src="script.js"></script>
 </body>
 </html>
