@@ -1,8 +1,7 @@
 {
-    "url": "https://testsiteton.netlify.app",
-    "name": "TON Faucet",
-    "iconUrl": "https://testsiteton.netlify.app/favicon.ico",
-    "termsOfUseUrl": "https://testsiteton.netlify.app/terms",
-    "privacyPolicyUrl": "https://testsiteton.netlify.app/privacy"
+  "url": "https://testsiteton.netlify.app/",
+  "name": "TON Test Site",
+  "iconUrl": "https://testsiteton.netlify.app/logo.png",
+  "termsOfUseUrl": "https://testsiteton.netlify.app/terms",
+  "privacyPolicyUrl": "https://testsiteton.netlify.app/privacy"
 }
-
