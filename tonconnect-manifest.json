@@ -1,10 +1,10 @@
 {
     "url": "https://testsiteton.netlify.app",
     "name": "TON Wallet Connect",
-    "iconUrl": "https://testsiteton.netlify.app/icon.png",
+    "iconUrl": "https://ton.org/assets/logo.svg",
     "termsOfUseUrl": "https://testsiteton.netlify.app/terms",
     "privacyPolicyUrl": "https://testsiteton.netlify.app/privacy",
-    "manifestVersion": "0.1",
+    "manifestUrl": "https://testsiteton.netlify.app/tonconnect-manifest.json",
     "items": [
         {
             "name": "ton_addr",
