@@ -4,22 +4,40 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TON Wallet Connect</title>
-    <script src="https://cdn.jsdelivr.net/npm/@tonconnect/sdk@0.0.35/dist/tonconnect-sdk.min.js"></script>
+    <script src="https://unpkg.com/@tonconnect/sdk@0.0.55/dist/tonconnect-sdk.min.js"></script>
 </head>
 <body style="font-family: Arial, sans-serif; text-align: center; padding: 50px; background-color: #f0f0f0;">
     <h1>TON Wallet Connect</h1>
     <button id="connectButton" style="padding: 10px 20px; font-size: 16px; cursor: pointer;">Wallet Connect</button>
     <p id="walletAddress" style="margin-top: 20px;"></p>
-
     <script>
-        const tonConnect = new TONConnect();
+        const tonConnect = new TONConnect({
+            manifestUrl: "https://ton.org/tonconnect-manifest.json"
+        });
 
-        document.getElementById('connectButton').addEventListener('click', async () => {
+        document.getElementById("connectButton").addEventListener("click", async () => {
             try {
-                const wallet = await tonConnect.connectWallet();
-                document.getElementById('walletAddress').innerText = `Bağlı Cüzdan: ${wallet.address}`;
+                const wallets = await tonConnect.getWallets();
+                const tonkeeper = wallets.find(w => w.appName === "Tonkeeper");
+
+                if (tonkeeper) {
+                    const connection = await tonConnect.connect({
+                        universalLink: tonkeeper.universalLink,
+                        bridgeUrl: tonkeeper.bridgeUrl
+                    });
+
+                    if (connection) {
+                        const wallet = tonConnect.wallet;
+                        document.getElementById("walletAddress").innerText = `Bağlı Cüzdan: ${wallet.account.address}`;
+                    } else {
+                        alert("Cüzdan bağlantısı başarısız oldu.");
+                    }
+                } else {
+                    alert("Tonkeeper cüzdanı bulunamadı.");
+                }
             } catch (error) {
-                alert('Cüzdan bağlantısı başarısız: ' + error.message);
+                console.error("Bağlantı hatası:", error);
+                alert("Cüzdan bağlantısı başarısız: " + error.message);
             }
         });
     </script>
