@@ -3,29 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TON Wallet Connect</title>
+    <title>TON Cüzdan Bağlantısı</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tonconnect/sdk@latest"></script>
 </head>
 <body>
     <h1>TON Cüzdan Bağlantısı</h1>
-    <button id="connect">Cüzdanı Bağla</button>
-    <script type="module">
-        import { TonConnect } from '@tonconnect/sdk';
+    <button id="connectButton">Cüzdan Bağla</button>
+    <p id="walletAddress"></p>
 
-        const tonConnect = new TonConnect({
-            manifestUrl: 'https://cryptominergames.vercel.app/tonconnect-manifest.json'
-        });
+    <script>
+        const tonConnect = new TonConnect();
 
-        document.getElementById('connect').addEventListener('click', async () => {
+        document.getElementById("connectButton").addEventListener("click", async () => {
             try {
-                const connected = await tonConnect.connect();
-                if (connected) {
-                    alert('Cüzdan başarıyla bağlandı!');
+                const wallet = await tonConnect.connectWallet();
+                if (wallet) {
+                    document.getElementById("walletAddress").innerText = `Cüzdan Bağlandı: ${wallet.account.address}`;
                 } else {
-                    alert('Cüzdan bağlantısı reddedildi.');
+                    alert("Cüzdan bağlantısı iptal edildi.");
                 }
             } catch (error) {
-                console.error('Bağlantı hatası:', error);
-                alert('Cüzdan bağlanırken hata oluştu. Lütfen tekrar deneyin.');
+                console.error("Bağlantı hatası:", error);
+                alert("Cüzdan bağlanırken bir hata oluştu.");
             }
         });
     </script>
