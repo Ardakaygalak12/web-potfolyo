@@ -62,28 +62,10 @@
             transform: translateY(-2px);
         }
 
-        .connect-button:active {
-            transform: translateY(0);
-        }
-
         #status {
             margin-top: 20px;
             color: white;
             font-size: 14px;
-            word-break: break-all;
-        }
-
-        .wallet-info {
-            display: none;
-            margin-top: 20px;
-            padding: 15px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
-            color: white;
-        }
-
-        .wallet-info.active {
-            display: block;
         }
     </style>
 </head>
@@ -97,73 +79,54 @@
         <button class="connect-button" onclick="connectWallet()">
             Telegram Cüzdanını Bağla
         </button>
-
         <div id="status"></div>
-        <div id="walletInfo" class="wallet-info"></div>
     </div>
 
     <script>
-        const connector = new TonConnectSDK.TonConnect({
-            manifestUrl: 'https://testsiteton.netlify.app/tonconnect-manifest.json'
-        });
+        // SDK'yı hazırla
+        const tonConnectRequest = encodeURIComponent(JSON.stringify({
+            manifestUrl: "https://testsiteton.netlify.app/tonconnect-manifest.json",
+            items: ["ton_addr"]
+        }));
 
-        async function connectWallet() {
+        function connectWallet() {
             try {
-                const setStatus = (message) => {
-                    document.getElementById('status').textContent = message;
-                };
-
-                setStatus('Cüzdan bağlanıyor...');
-
                 const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-                
-                const walletConnectionSource = {
-                    bridgeUrl: 'https://bridge.tonapi.io/bridge',
-                    universalLink: 'https://t.me/wallet',
-                    jsBridgeKey: 'tonconnect'
-                };
-
-                // Bağlantı URL'sini al
-                const universalLink = connector.connect(walletConnectionSource);
+                let walletUrl;
 
                 if (isMobile) {
-                    window.location.href = 'https://t.me/wallet/start?startapp=tonconnect-manifest';
+                    // Mobil için Telegram deep link
+                    walletUrl = `https://t.me/wallet/start?startapp=tonconnect-${tonConnectRequest}`;
                 } else {
-                    window.location.href = 'tg://resolve?domain=wallet&startapp=tonconnect-manifest';
+                    // Desktop için Telegram protokol
+                    walletUrl = `tg://resolve?domain=wallet&startapp=tonconnect-${tonConnectRequest}`;
                 }
 
+                // Cüzdanı aç
+                window.location.href = walletUrl;
+                
+                document.getElementById('status').textContent = 'Telegram Wallet açılıyor...';
             } catch (error) {
                 document.getElementById('status').textContent = 'Bağlantı hatası: ' + error.message;
                 console.error('Bağlantı hatası:', error);
             }
         }
 
-        // Bağlantı durumunu dinle
-        connector.onStatusChange((wallet) => {
-            if (wallet) {
-                const walletInfo = document.getElementById('walletInfo');
-                walletInfo.innerHTML = `
-                    <h3>Cüzdan Bağlandı</h3>
-                    <p>Adres: ${wallet.account.address}</p>
-                `;
-                walletInfo.classList.add('active');
-                document.getElementById('status').textContent = 'Bağlantı başarılı!';
-            } else {
-                document.getElementById('walletInfo').classList.remove('active');
-                document.getElementById('status').textContent = '';
-            }
-        });
-
-        // Sayfa yüklendiğinde mevcut bağlantıyı kontrol et
-        window.addEventListener('load', async () => {
-            const currentWallet = await connector.getWalletInfo();
-            if (currentWallet) {
-                const walletInfo = document.getElementById('walletInfo');
-                walletInfo.innerHTML = `
-                    <h3>Cüzdan Bağlı</h3>
-                    <p>Adres: ${currentWallet.account.address}</p>
-                `;
-                walletInfo.classList.add('active');
+        // Sayfa yüklendiğinde
+        window.addEventListener('load', () => {
+            // URL parametrelerini kontrol et
+            const urlParams = new URLSearchParams(window.location.search);
+            const tonConnect = urlParams.get('tonconnect');
+            
+            if (tonConnect) {
+                try {
+                    const walletData = JSON.parse(decodeURIComponent(tonConnect));
+                    if (walletData.address) {
+                        document.getElementById('status').textContent = 'Cüzdan bağlandı: ' + walletData.address;
+                    }
+                } catch (e) {
+                    console.error('Wallet data parse error:', e);
+                }
             }
         });
     </script>
