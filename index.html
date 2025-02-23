@@ -1,134 +1,124 @@
 <!DOCTYPE html>
-<html lang="tr">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TON Wallet Connect</title>
-    <script src="https://unpkg.com/@tonconnect/sdk@latest/dist/tonconnect-sdk.min.js"></script>
+    <title>Uzay Madenci</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
         body {
-            width: 100%;
-            min-height: 100vh;
-            background: linear-gradient(135deg, #0088cc, #004466);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            font-family: system-ui, -apple-system, sans-serif;
+            background: #1a1a1a;
+            color: white;
+            font-family: Arial;
+            margin: 0;
             padding: 20px;
         }
-
         .container {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
-            padding: 30px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-            max-width: 400px;
-            width: 90%;
-            text-align: center;
+            max-width: 500px;
+            margin: 0 auto;
         }
-
         .header {
-            margin-bottom: 30px;
-            color: white;
-        }
-
-        .connect-button {
-            background: #229ED9;
-            color: white;
-            border: none;
-            padding: 16px;
-            border-radius: 12px;
-            font-size: 16px;
-            font-weight: 500;
-            cursor: pointer;
-            width: 100%;
-            transition: all 0.3s ease;
+            background: #2d2d2d;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
             display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
+            justify-content: space-between;
         }
-
-        .connect-button:hover {
-            background: #1C8AC0;
-            transform: translateY(-2px);
-        }
-
-        #status {
-            margin-top: 20px;
+        .button {
+            background: linear-gradient(45deg, #4c00ff, #0066ff);
+            border: none;
             color: white;
-            font-size: 14px;
+            padding: 15px;
+            width: 100%;
+            border-radius: 10px;
+            font-size: 18px;
+            margin: 10px 0;
+            cursor: pointer;
+        }
+        .stats {
+            background: #2d2d2d;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>TON Wallet</h1>
-            <p>Cüzdanınızı bağlamak için tıklayın</p>
+            <div>🚀 Uzay Madenci</div>
+            <div>💎 <span id="minerals">0</span></div>
         </div>
 
-        <button class="connect-button" onclick="connectWallet()">
-            Telegram Cüzdanını Bağla
+        <button class="button" onclick="mine()" id="mineButton">
+            Madencilik Yap
         </button>
-        <div id="status"></div>
+
+        <button class="button" style="background: linear-gradient(45deg, #00a642, #00d95f)" onclick="upgrade()">
+            Gemi Güçlendir (<span id="upgradeCost">100</span> 💎)
+        </button>
+
+        <div class="stats">
+            🚀 Gemi Gücü: <span id="power">1</span>
+        </div>
     </div>
 
     <script>
-        // SDK'yı hazırla
-        const tonConnectRequest = encodeURIComponent(JSON.stringify({
-            manifestUrl: "https://testsiteton.netlify.app/tonconnect-manifest.json",
-            items: ["ton_addr"]
-        }));
+        let minerals = 0;
+        let power = 1;
+        let isMining = false;
+        const telegram = window.Telegram.WebApp;
 
-        function connectWallet() {
-            try {
-                const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-                let walletUrl;
+        function updateDisplay() {
+            document.getElementById('minerals').textContent = minerals;
+            document.getElementById('power').textContent = power;
+            document.getElementById('upgradeCost').textContent = power * 100;
+        }
 
-                if (isMobile) {
-                    // Mobil için Telegram deep link
-                    walletUrl = `https://t.me/wallet/start?startapp=tonconnect-${tonConnectRequest}`;
-                } else {
-                    // Desktop için Telegram protokol
-                    walletUrl = `tg://resolve?domain=wallet&startapp=tonconnect-${tonConnectRequest}`;
-                }
+        function mine() {
+            if (isMining) return;
+            
+            const button = document.getElementById('mineButton');
+            button.textContent = "Madencilik Yapılıyor...";
+            isMining = true;
 
-                // Cüzdanı aç
-                window.location.href = walletUrl;
+            setTimeout(() => {
+                const reward = Math.floor(Math.random() * 10 * power) + 1;
+                minerals += reward;
+                updateDisplay();
                 
-                document.getElementById('status').textContent = 'Telegram Wallet açılıyor...';
-            } catch (error) {
-                document.getElementById('status').textContent = 'Bağlantı hatası: ' + error.message;
-                console.error('Bağlantı hatası:', error);
+                telegram.hapticFeedback.notificationOccurred('success');
+                telegram.showPopup({
+                    title: 'Başarılı!',
+                    message: `${reward} mineral kazandın! 🎉`,
+                    buttons: [{type: 'ok'}]
+                });
+
+                button.textContent = "Madencilik Yap";
+                isMining = false;
+            }, 2000);
+        }
+
+        function upgrade() {
+            const cost = power * 100;
+            if (minerals >= cost) {
+                minerals -= cost;
+                power += 1;
+                updateDisplay();
+                telegram.hapticFeedback.impactOccurred('heavy');
+            } else {
+                telegram.hapticFeedback.notificationOccurred('error');
+                telegram.showPopup({
+                    title: 'Yetersiz Mineral',
+                    message: 'Daha fazla mineral kazanman gerek!',
+                    buttons: [{type: 'ok'}]
+                });
             }
         }
 
-        // Sayfa yüklendiğinde
-        window.addEventListener('load', () => {
-            // URL parametrelerini kontrol et
-            const urlParams = new URLSearchParams(window.location.search);
-            const tonConnect = urlParams.get('tonconnect');
-            
-            if (tonConnect) {
-                try {
-                    const walletData = JSON.parse(decodeURIComponent(tonConnect));
-                    if (walletData.address) {
-                        document.getElementById('status').textContent = 'Cüzdan bağlandı: ' + walletData.address;
-                    }
-                } catch (e) {
-                    console.error('Wallet data parse error:', e);
-                }
-            }
-        });
+        // Telegram tema renklerini ayarla
+        telegram.ready();
+        telegram.setHeaderColor('#1a1a1a');
     </script>
 </body>
 </html>
