@@ -3,58 +3,189 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>TON MULTI WALLET CONNECT</title>
+    <title>TON WALLET BAĞLA</title>
     <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      
       body {
         width: 100%;
-        height: 100vh;
-        background: #000;
+        min-height: 100vh;
+        background: linear-gradient(135deg, #0088cc, #004466);
         display: flex;
         flex-direction: column;
         align-items: center;
-        gap: 1em;
         justify-content: center;
-        overflow: hidden;
-        color: white;
+        font-family: 'Arial', sans-serif;
+        padding: 20px;
       }
-      .wallet-buttons {
-        display: flex;
-        flex-direction: column;
-        gap: 1em;
+
+      .container {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        border-radius: 20px;
+        padding: 30px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        max-width: 500px;
+        width: 100%;
       }
-      button {
-        width: 200px;
-        height: 50px;
-        border-radius: 5px;
-        background: #0088CC;
-        color: white;
-        border: none;
-        cursor: pointer;
-        font-weight: bold;
-      }
-      button:hover {
-        background: #006699;
-      }
-      #walletAddress {
-        word-break: break-all;
-        max-width: 300px;
+
+      .header {
         text-align: center;
+        margin-bottom: 30px;
+        color: white;
+      }
+
+      .header h1 {
+        font-size: 2em;
+        margin-bottom: 10px;
+      }
+
+      .header p {
+        opacity: 0.8;
+      }
+
+      .wallet-buttons {
+        display: grid;
+        gap: 15px;
+        margin-bottom: 20px;
+      }
+
+      .wallet-button {
+        display: flex;
+        align-items: center;
+        padding: 15px 20px;
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        cursor: pointer;
+        transition: all 0.3s ease;
+        color: white;
+        font-weight: 500;
+      }
+
+      .wallet-button:hover {
+        background: rgba(255, 255, 255, 0.2);
+        transform: translateY(-2px);
+      }
+
+      .wallet-button img {
+        width: 30px;
+        height: 30px;
+        margin-right: 15px;
+      }
+
+      .wallet-info {
+        background: rgba(0, 0, 0, 0.2);
+        padding: 20px;
+        border-radius: 12px;
+        color: white;
+        margin-top: 20px;
+        word-break: break-all;
+        display: none;
+      }
+
+      .wallet-info.active {
+        display: block;
+        animation: fadeIn 0.3s ease;
+      }
+
+      .wallet-balance {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: rgba(255, 255, 255, 0.1);
+        padding: 15px;
+        border-radius: 10px;
+        margin-top: 15px;
+      }
+
+      .loading {
+        display: none;
+        color: white;
+        text-align: center;
+        padding: 20px;
+      }
+
+      .loading.active {
+        display: block;
+      }
+
+      @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(-10px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+
+      @keyframes spin {
+        to { transform: rotate(360deg); }
+      }
+
+      .error-message {
+        color: #ff4444;
+        background: rgba(255, 68, 68, 0.1);
+        padding: 10px;
+        border-radius: 8px;
+        margin-top: 10px;
+        display: none;
+      }
+
+      .error-message.active {
+        display: block;
       }
     </style>
   </head>
   <body>
-    <div class="wallet-buttons">
-      <button onclick="connectWallet('tonkeeper')">Connect TonKeeper</button>
-      <button onclick="connectWallet('mytonwallet')">Connect MyTonWallet</button>
-      <button onclick="connectWallet('tonhub')">Connect Tonhub</button>
-      <button onclick="connectWallet('openmask')">Connect OpenMask</button>
+    <div class="container">
+      <div class="header">
+        <h1>TON Cüzdanını Bağla</h1>
+        <p>Aşağıdaki cüzdanlardan birini seçerek bağlanabilirsiniz</p>
+      </div>
+
+      <div class="wallet-buttons">
+        <button class="wallet-button" onclick="connectWallet('tonkeeper')">
+          <img src="https://app.tonkeeper.com/favicon.ico" alt="TonKeeper">
+          TonKeeper ile Bağlan
+        </button>
+        
+        <button class="wallet-button" onclick="connectWallet('mytonwallet')">
+          <img src="https://mytonwallet.io/favicon.ico" alt="MyTonWallet">
+          MyTonWallet ile Bağlan
+        </button>
+        
+        <button class="wallet-button" onclick="connectWallet('tonhub')">
+          <img src="https://tonhub.com/favicon.ico" alt="Tonhub">
+          Tonhub ile Bağlan
+        </button>
+
+        <button class="wallet-button" onclick="connectWallet('telegram')">
+          <img src="https://telegram.org/favicon.ico" alt="Telegram Wallet">
+          Telegram TON Wallet ile Bağlan
+        </button>
+      </div>
+
+      <div id="loading" class="loading">
+        Cüzdan bağlantısı bekleniyor...
+      </div>
+
+      <div id="error" class="error-message"></div>
+
+      <div id="walletInfo" class="wallet-info">
+        <h3>Bağlı Cüzdan Bilgileri</h3>
+        <p id="walletAddress"></p>
+        <div class="wallet-balance">
+          <span>Bakiye:</span>
+          <span id="balance">0 TON</span>
+        </div>
+      </div>
     </div>
-    <p id="walletAddress"></p>
 
     <script src="https://unpkg.com/@tonconnect/sdk@latest/dist/tonconnect-sdk.min.js"></script>
     <script>
       const connector = new TonConnectSDK.TonConnect({
-        manifestUrl: "https://raw.githubusercontent.com/nuex001/Tonkeepermanifest/main/tonconnect-manifest.json"
+        manifestUrl: "https://testsiteton.netlify.app/tonconnect-manifest.json"
       });
 
       const walletConfigs = {
@@ -70,47 +201,102 @@
           universalLink: "https://tonhub.com/ton-connect",
           bridgeUrl: "https://connect.tonhub.com/bridge"
         },
-        openmask: {
-          universalLink: "https://wallet.openmask.app/ton-connect",
-          bridgeUrl: "https://bridge.openmask.app"
+        telegram: {
+          universalLink: "https://t.me/wallet?startattach=tonconnect",
+          bridgeUrl: "https://bridge.tonapi.io/bridge"
         }
       };
 
-      const connectWallet = (walletType) => {
+      let currentWallet = null;
+
+      const showLoading = (show) => {
+        document.getElementById('loading').classList.toggle('active', show);
+      };
+
+      const showError = (message) => {
+        const errorElement = document.getElementById('error');
+        errorElement.textContent = message;
+        errorElement.classList.add('active');
+        setTimeout(() => errorElement.classList.remove('active'), 5000);
+      };
+
+      const updateWalletInfo = (address, balance = null) => {
+        const walletInfo = document.getElementById('walletInfo');
+        const walletAddress = document.getElementById('walletAddress');
+        const balanceElement = document.getElementById('balance');
+
+        walletAddress.textContent = `Adres: ${address}`;
+        if (balance !== null) {
+          balanceElement.textContent = `${balance} TON`;
+        }
+        walletInfo.classList.add('active');
+      };
+
+      const getBalance = async (address) => {
+        try {
+          const response = await fetch(`https://toncenter.com/api/v2/getAddressBalance?address=${address}`);
+          const data = await response.json();
+          if (data.ok) {
+            return (data.result / 1000000000).toFixed(2); // Convert from nanoTON to TON
+          }
+          return null;
+        } catch (error) {
+          console.error('Balance fetch error:', error);
+          return null;
+        }
+      };
+
+      const connectWallet = async (walletType) => {
         if (!walletConfigs[walletType]) {
-          console.error('Wallet type not supported');
+          showError('Bu cüzdan türü desteklenmiyor');
           return;
         }
 
-        const walletConnectionSource = walletConfigs[walletType];
-        const universalLink = connector.connect(walletConnectionSource);
-        window.open(universalLink, "_blank");
+        showLoading(true);
+        try {
+          const walletConnectionSource = walletConfigs[walletType];
+          const universalLink = connector.connect(walletConnectionSource);
+          
+          if (walletType === 'telegram') {
+            // Telegram için özel işlem
+            window.location.href = walletConnectionSource.universalLink;
+          } else {
+            window.open(universalLink, "_blank");
+          }
+          
+          currentWallet = walletType;
+        } catch (error) {
+          showError('Cüzdan bağlantısı başlatılırken hata oluştu');
+          console.error('Connection error:', error);
+        }
+        showLoading(false);
       };
 
-      connector.onStatusChange((status) => {
-        console.log("Connection status changed:", status);
+      connector.onStatusChange(async (status) => {
+        console.log("Bağlantı durumu değişti:", status);
+        showLoading(false);
+
         if (status) {
           const rawAddress = status.account.address;
-          const apiUrl = `https://toncenter.com/api/v2/packAddress?address=${encodeURIComponent(rawAddress)}`;
-          
-          fetch(apiUrl, {
-            method: "GET",
-            headers: {
-              accept: "application/json",
-            }
-          })
-            .then((response) => response.json())
-            .then((data) => {
-              if (data.ok) {
-                document.getElementById('walletAddress').textContent = `Connected Wallet Address: ${data.result}`;
-              } else {
-                console.error("Error:", data);
-              }
-            })
-            .catch((error) => {
-              console.error("Fetch Error:", error);
-              document.getElementById('walletAddress').textContent = `Connected Wallet Address: ${rawAddress}`;
-            });
+          try {
+            const balance = await getBalance(rawAddress);
+            updateWalletInfo(rawAddress, balance);
+          } catch (error) {
+            showError('Cüzdan bilgileri alınırken hata oluştu');
+            console.error('Wallet info error:', error);
+          }
+        } else {
+          document.getElementById('walletInfo').classList.remove('active');
+        }
+      });
+
+      // Sayfa yüklendiğinde bağlantı durumunu kontrol et
+      window.addEventListener('load', async () => {
+        const status = await connector.getWalletInfo();
+        if (status) {
+          const rawAddress = status.account.address;
+          const balance = await getBalance(rawAddress);
+          updateWalletInfo(rawAddress, balance);
         }
       });
     </script>
