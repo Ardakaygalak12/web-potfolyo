@@ -1,6 +1,7 @@
 {
-  "url": "https://cryptominergames.vercel.app/",
-  "name": "TonKeeper Test App",
-  "iconUrl": "https://ton.org/download/ton_symbol.png",
-  "manifestVersion": "0.3"
+  "name": "TON Faucet",
+  "description": "TON Faucet cüzdan bağlama uygulaması.",
+  "url": "https://testsiteton.netlify.app",
+  "icons": ["https://testsiteton.netlify.app/icon.png"],
+  "bridgeUrl": "https://bridge.tonapi.io/bridge"
 }
