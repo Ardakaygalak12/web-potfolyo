@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TON Wallet Connect</title>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         body {
             margin: 0;
@@ -47,6 +46,11 @@
             color: white;
             margin-bottom: 20px;
         }
+
+        #status {
+            color: #fff;
+            margin-top: 15px;
+        }
     </style>
 </head>
 <body>
@@ -55,28 +59,47 @@
         <button class="connect-button" onclick="connectWallet()">
             Telegram Cüzdanını Bağla
         </button>
+        <div id="status"></div>
     </div>
 
     <script>
         function connectWallet() {
-            // Direkt Telegram Wallet'a yönlendir
-            const deepLink = 'https://t.me/wallet?startapp=wallet';
-            window.location.href = deepLink;
+            try {
+                // TON Wallet protokolü için özel URI
+                const tonConnectUrl = `ton://connect/v2?r=https://testsiteton.netlify.app&v=2`;
+                
+                // Mobil/Desktop kontrolü
+                const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+                
+                if (isMobile) {
+                    // Mobil için Telegram deep link
+                    window.location.href = `https://t.me/wallet?attach=wallet&connect=v2&r=https://testsiteton.netlify.app`;
+                } else {
+                    // Desktop için Telegram URI şeması
+                    window.location.href = `tg://resolve?domain=wallet&startapp=wallet&connect=v2&r=https://testsiteton.netlify.app`;
+                }
+
+                document.getElementById('status').textContent = 'Cüzdan açılıyor...';
+
+                // Bağlantı durumunu kontrol et
+                checkConnectionStatus();
+            } catch (error) {
+                document.getElementById('status').textContent = 'Bağlantı hatası: ' + error.message;
+            }
         }
 
-        // Telegram WebApp API'si hazır olduğunda
-        window.Telegram.WebApp.ready();
-
-        // Ana uygulamaya genişlet
-        window.Telegram.WebApp.expand();
-
-        // Tema renklerini uygula
-        const colorScheme = window.Telegram.WebApp.colorScheme;
-        if (colorScheme === 'dark') {
-            document.body.style.background = '#1c1c1c';
-        } else {
-            document.body.style.background = '#ffffff';
+        function checkConnectionStatus() {
+            // URL parametrelerini kontrol et
+            const urlParams = new URLSearchParams(window.location.search);
+            const address = urlParams.get('address');
+            
+            if (address) {
+                document.getElementById('status').textContent = `Cüzdan bağlandı! Adres: ${address}`;
+            }
         }
+
+        // Sayfa yüklendiğinde bağlantı durumunu kontrol et
+        window.onload = checkConnectionStatus;
     </script>
 </body>
 </html>
