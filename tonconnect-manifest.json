@@ -1,7 +1,7 @@
 {
-  "name": "TON Faucet",
-  "description": "TON Faucet cüzdan bağlama uygulaması.",
-  "url": "https://testsiteton.netlify.app",
-  "icons": ["https://testsiteton.netlify.app/icon.png"],
-  "bridgeUrl": "https://bridge.tonapi.io/bridge"
+    "url": "https://testsiteton.netlify.app",
+    "name": "TON Faucet",
+    "iconUrl": "https://testsiteton.netlify.app/favicon.ico",
+    "termsOfUseUrl": "https://testsiteton.netlify.app/terms",
+    "privacyPolicyUrl": "https://testsiteton.netlify.app/privacy"
 }
