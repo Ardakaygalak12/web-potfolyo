@@ -1,7 +1,7 @@
 {
-  "url": "https://testsiteton.netlify.app/",
-  "name": "TON Test Site",
-  "iconUrl": "https://testsiteton.netlify.app/logo.png",
+  "url": "https://testsiteton.netlify.app",
+  "name": "TON Wallet Test",
+  "iconUrl": "https://ton.org/assets/logo.svg",
   "termsOfUseUrl": "https://testsiteton.netlify.app/terms",
   "privacyPolicyUrl": "https://testsiteton.netlify.app/privacy"
 }
