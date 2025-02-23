@@ -1,16 +1,118 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TON Faucet</title>
-    <script type="module" src="https://cdn.jsdelivr.net/npm/@tonconnect/sdk@2.0.0/dist/tonconnect.min.js"></script>
-</head>
-<body>
-    <h1>TON Faucet</h1>
-    <button id="connectBtn">Cüzdanı Bağla</button>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TON MULTI WALLET CONNECT</title>
+    <style>
+      body {
+        width: 100%;
+        height: 100vh;
+        background: #000;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1em;
+        justify-content: center;
+        overflow: hidden;
+        color: white;
+      }
+      .wallet-buttons {
+        display: flex;
+        flex-direction: column;
+        gap: 1em;
+      }
+      button {
+        width: 200px;
+        height: 50px;
+        border-radius: 5px;
+        background: #0088CC;
+        color: white;
+        border: none;
+        cursor: pointer;
+        font-weight: bold;
+      }
+      button:hover {
+        background: #006699;
+      }
+      #walletAddress {
+        word-break: break-all;
+        max-width: 300px;
+        text-align: center;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wallet-buttons">
+      <button onclick="connectWallet('tonkeeper')">Connect TonKeeper</button>
+      <button onclick="connectWallet('mytonwallet')">Connect MyTonWallet</button>
+      <button onclick="connectWallet('tonhub')">Connect Tonhub</button>
+      <button onclick="connectWallet('openmask')">Connect OpenMask</button>
+    </div>
     <p id="walletAddress"></p>
 
-    <script src="script.js" type="module"></script>
-</body>
+    <script src="https://unpkg.com/@tonconnect/sdk@latest/dist/tonconnect-sdk.min.js"></script>
+    <script>
+      const connector = new TonConnectSDK.TonConnect({
+        manifestUrl: "https://raw.githubusercontent.com/nuex001/Tonkeepermanifest/main/tonconnect-manifest.json"
+      });
+
+      const walletConfigs = {
+        tonkeeper: {
+          universalLink: "https://app.tonkeeper.com/ton-connect",
+          bridgeUrl: "https://bridge.tonapi.io/bridge"
+        },
+        mytonwallet: {
+          universalLink: "https://connect.mytonwallet.org",
+          bridgeUrl: "https://connect.mytonwallet.org/bridge"
+        },
+        tonhub: {
+          universalLink: "https://tonhub.com/ton-connect",
+          bridgeUrl: "https://connect.tonhub.com/bridge"
+        },
+        openmask: {
+          universalLink: "https://wallet.openmask.app/ton-connect",
+          bridgeUrl: "https://bridge.openmask.app"
+        }
+      };
+
+      const connectWallet = (walletType) => {
+        if (!walletConfigs[walletType]) {
+          console.error('Wallet type not supported');
+          return;
+        }
+
+        const walletConnectionSource = walletConfigs[walletType];
+        const universalLink = connector.connect(walletConnectionSource);
+        window.open(universalLink, "_blank");
+      };
+
+      connector.onStatusChange((status) => {
+        console.log("Connection status changed:", status);
+        if (status) {
+          const rawAddress = status.account.address;
+          const apiUrl = `https://toncenter.com/api/v2/packAddress?address=${encodeURIComponent(rawAddress)}`;
+          
+          fetch(apiUrl, {
+            method: "GET",
+            headers: {
+              accept: "application/json",
+            }
+          })
+            .then((response) => response.json())
+            .then((data) => {
+              if (data.ok) {
+                document.getElementById('walletAddress').textContent = `Connected Wallet Address: ${data.result}`;
+              } else {
+                console.error("Error:", data);
+              }
+            })
+            .catch((error) => {
+              console.error("Fetch Error:", error);
+              document.getElementById('walletAddress').textContent = `Connected Wallet Address: ${rawAddress}`;
+            });
+        }
+      });
+    </script>
+  </body>
 </html>
