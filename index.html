@@ -2,20 +2,30 @@
 <html>
 <head>
     <title>Uzay Madenci</title>
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tonweb@0.0.60/dist/tonweb.js"></script>
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
             background: #1a1a1a;
             color: white;
-            font-family: Arial;
-            margin: 0;
+            font-family: Arial, sans-serif;
             padding: 20px;
+            min-height: 100vh;
         }
+
         .container {
             max-width: 500px;
             margin: 0 auto;
         }
+
         .header {
             background: #2d2d2d;
             padding: 15px;
@@ -23,7 +33,23 @@
             margin-bottom: 20px;
             display: flex;
             justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
+
+        .header-title {
+            font-size: 20px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .header-stats {
+            display: flex;
+            gap: 15px;
+        }
+
         .button {
             background: linear-gradient(45deg, #4c00ff, #0066ff);
             border: none;
@@ -34,91 +60,365 @@
             font-size: 18px;
             margin: 10px 0;
             cursor: pointer;
+            transition: transform 0.2s, filter 0.2s;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
+
+        .button:hover {
+            transform: translateY(-2px);
+            filter: brightness(1.1);
+        }
+
+        .button:active {
+            transform: translateY(1px);
+        }
+
+        .button:disabled {
+            background: #666;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .upgrade-button {
+            background: linear-gradient(45deg, #00a642, #00d95f);
+        }
+
+        .wallet-button {
+            background: linear-gradient(45deg, #ff6b6b, #ff8e8e);
+        }
+
+        .shop-button {
+            background: linear-gradient(45deg, #ffd700, #ffa500);
+        }
+
         .stats {
             background: #2d2d2d;
             padding: 15px;
             border-radius: 10px;
             margin-top: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .stat-item {
+            background: #3d3d3d;
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: #999;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .mining-animation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .mining-animation-content {
+            text-align: center;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .history {
+            margin-top: 20px;
+            background: #2d2d2d;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .history-title {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .history-item {
+            background: #3d3d3d;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .history-time {
+            font-size: 14px;
+            color: #999;
+        }
+
+        .history-amount {
+            font-weight: bold;
+            color: #4c00ff;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <div>🚀 Uzay Madenci</div>
-            <div>💎 <span id="minerals">0</span></div>
+            <div class="header-title">
+                🚀 Uzay Madenci
+            </div>
+            <div class="header-stats">
+                <div>💎 <span id="minerals">0</span></div>
+                <div>⚡ <span id="power">1</span></div>
+            </div>
         </div>
+
+        <button class="button wallet-button" onclick="connectWallet()" id="walletButton">
+            Cüzdan Bağla
+        </button>
 
         <button class="button" onclick="mine()" id="mineButton">
             Madencilik Yap
         </button>
 
-        <button class="button" style="background: linear-gradient(45deg, #00a642, #00d95f)" onclick="upgrade()">
+        <button class="button upgrade-button" onclick="upgrade()" id="upgradeButton">
             Gemi Güçlendir (<span id="upgradeCost">100</span> 💎)
         </button>
 
+        <button class="button shop-button" onclick="purchaseMinerals()">
+            100 Mineral Satın Al (0.1 TON)
+        </button>
+
         <div class="stats">
-            🚀 Gemi Gücü: <span id="power">1</span>
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="stat-label">Toplam Mineral</div>
+                    <div class="stat-value" id="totalMinerals">0</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Gemi Gücü</div>
+                    <div class="stat-value" id="shipPower">1</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="history" id="miningHistory">
+            <div class="history-title">Madencilik Geçmişi</div>
+            <!-- Geçmiş kayıtları buraya eklenecek -->
+        </div>
+    </div>
+
+    <div id="miningAnimation" style="display: none;" class="mining-animation">
+        <div class="mining-animation-content">
+            <h2>👨‍🚀 Madencilik Yapılıyor</h2>
+            <p>Asteroid kazılıyor...</p>
         </div>
     </div>
 
     <script>
-        let minerals = 0;
-        let power = 1;
-        let isMining = false;
+        const API_URL = 'http://localhost:3000'; // Backend sunucu adresi
         const telegram = window.Telegram.WebApp;
+        let walletAddress = null;
+
+        let gameState = {
+            minerals: 0,
+            power: 1,
+            isMining: false,
+            miningHistory: []
+        };
 
         function updateDisplay() {
-            document.getElementById('minerals').textContent = minerals;
-            document.getElementById('power').textContent = power;
-            document.getElementById('upgradeCost').textContent = power * 100;
+            document.getElementById('minerals').textContent = gameState.minerals;
+            document.getElementById('power').textContent = gameState.power;
+            document.getElementById('upgradeCost').textContent = gameState.power * 100;
+            document.getElementById('totalMinerals').textContent = gameState.minerals;
+            document.getElementById('shipPower').textContent = gameState.power;
+            updateMiningHistory();
         }
 
-        function mine() {
-            if (isMining) return;
+        function updateMiningHistory() {
+            const historyContainer = document.getElementById('miningHistory');
+            const historyHtml = gameState.miningHistory.map(record => `
+                <div class="history-item">
+                    <span class="history-time">${new Date(record.timestamp).toLocaleTimeString()}</span>
+                    <span class="history-amount">+${record.amount} 💎</span>
+                </div>
+            `).join('');
             
-            const button = document.getElementById('mineButton');
-            button.textContent = "Madencilik Yapılıyor...";
-            isMining = true;
+            historyContainer.innerHTML = `
+                <div class="history-title">Madencilik Geçmişi</div>
+                ${historyHtml}
+            `;
+        }
 
-            setTimeout(() => {
-                const reward = Math.floor(Math.random() * 10 * power) + 1;
-                minerals += reward;
-                updateDisplay();
+        async function connectWallet() {
+            try {
+                const provider = window.ton;
+                if (!provider) {
+                    telegram.showPopup({
+                        title: 'Hata',
+                        message: 'Lütfen TON cüzdanı yükleyin',
+                        buttons: [{type: 'ok'}]
+                    });
+                    return;
+                }
+
+                const accounts = await provider.send('ton_requestAccounts');
+                walletAddress = accounts[0];
+
+                const response = await fetch(`${API_URL}/connect-wallet`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        telegramId: telegram.initDataUnsafe.user.id,
+                        walletAddress
+                    })
+                });
+
+                if (response.ok) {
+                    document.getElementById('walletButton').textContent = 'Cüzdan Bağlı ✅';
+                    telegram.showPopup({
+                        title: 'Başarılı',
+                        message: 'Cüzdan bağlandı!',
+                        buttons: [{type: 'ok'}]
+                    });
+                }
+            } catch (error) {
+                telegram.showPopup({
+                    title: 'Hata',
+                    message: 'Cüzdan bağlama hatası!',
+                    buttons: [{type: 'ok'}]
+                });
+            }
+        }
+
+        async function mine() {
+            if (gameState.isMining) return;
+            
+            gameState.isMining = true;
+            document.getElementById('mineButton').disabled = true;
+            document.getElementById('miningAnimation').style.display = 'flex';
+            telegram.hapticFeedback.impactOccurred('medium');
+
+            setTimeout(async () => {
+                const reward = Math.floor(Math.random() * 10 * gameState.power) + 1;
+                gameState.minerals += reward;
+                gameState.miningHistory.unshift({
+                    timestamp: Date.now(),
+                    amount: reward
+                });
                 
+                if (gameState.miningHistory.length > 5) {
+                    gameState.miningHistory.pop();
+                }
+
+                updateDisplay();
+                gameState.isMining = false;
+                document.getElementById('mineButton').disabled = false;
+                document.getElementById('miningAnimation').style.display = 'none';
+
                 telegram.hapticFeedback.notificationOccurred('success');
                 telegram.showPopup({
                     title: 'Başarılı!',
                     message: `${reward} mineral kazandın! 🎉`,
                     buttons: [{type: 'ok'}]
                 });
-
-                button.textContent = "Madencilik Yap";
-                isMining = false;
-            }, 2000);
+            }, 3000);
         }
 
         function upgrade() {
-            const cost = power * 100;
-            if (minerals >= cost) {
-                minerals -= cost;
-                power += 1;
+            const cost = gameState.power * 100;
+            if (gameState.minerals >= cost) {
+                gameState.minerals -= cost;
+                gameState.power += 1;
                 updateDisplay();
                 telegram.hapticFeedback.impactOccurred('heavy');
+                telegram.showPopup({
+                    title: 'Yükseltme Başarılı!',
+                    message: `Gemi gücü ${gameState.power} seviyesine yükseltildi! 🚀`,
+                    buttons: [{type: 'ok'}]
+                });
             } else {
                 telegram.hapticFeedback.notificationOccurred('error');
                 telegram.showPopup({
                     title: 'Yetersiz Mineral',
-                    message: 'Daha fazla mineral kazanman gerek!',
+                    message: 'Yükseltme için yeterli mineralin yok!',
                     buttons: [{type: 'ok'}]
                 });
             }
         }
 
-        // Telegram tema renklerini ayarla
+        async function purchaseMinerals() {
+            if (!walletAddress) {
+                telegram.showPopup({
+                    title: 'Hata',
+                    message: 'Önce cüzdan bağlayın!',
+                    buttons: [{type: 'ok'}]
+                });
+                return;
+            }
+
+            try {
+                const provider = window.ton;
+                await provider.send('ton_sendTransaction', [{
+                    to: 'UQBoTE6mAMlmLCF8uYWCu3TGYqTvbrRKdBxOASpY0oM6UhcJ',
+                    value: '100000000' // 0.1 TON
+                }]);
+
+                const response = await fetch(`${API_URL}/purchase`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        telegramId: telegram.initDataUnsafe.user.id,
+                        amount: 100
+                    })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    gameState.minerals += 100;
+                    updateDisplay();
+                    telegram.showPopup({
+                        title: 'Başarılı',
+                        message: '100 mineral satın alındı! 💎',
+                        buttons: [{type: 'ok'}]
+                    });
+                }
+            } catch (error) {
+                telegram.showPopup({
+                    title: 'Hata',
+                    message: 'Satın alma işlemi başarısız!',
+                    buttons: [{type: 'ok'}]
+                });
+            }
+        }
+
+        // Oyunu başlat
         telegram.ready();
-        telegram.setHeaderColor('#1a1a1a');
+        telegram.expand();
+        updateDisplay();
     </script>
 </body>
 </html>
