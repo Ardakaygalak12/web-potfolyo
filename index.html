@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="tr">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>TON WALLET BAĞLA</title>
+    <title>Telegram TON Wallet Bağla</title>
     <style>
       * {
         margin: 0;
@@ -29,53 +29,48 @@
         border-radius: 20px;
         padding: 30px;
         box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-        max-width: 500px;
-        width: 100%;
+        max-width: 400px;
+        width: 90%;
+        text-align: center;
       }
 
       .header {
-        text-align: center;
         margin-bottom: 30px;
         color: white;
       }
 
-      .header h1 {
-        font-size: 2em;
-        margin-bottom: 10px;
+      .header img {
+        width: 80px;
+        height: 80px;
+        margin-bottom: 15px;
       }
 
-      .header p {
-        opacity: 0.8;
-      }
-
-      .wallet-buttons {
-        display: grid;
-        gap: 15px;
-        margin-bottom: 20px;
-      }
-
-      .wallet-button {
+      .connect-button {
         display: flex;
         align-items: center;
-        padding: 15px 20px;
+        justify-content: center;
+        width: 100%;
+        padding: 16px;
         border-radius: 12px;
-        background: rgba(255, 255, 255, 0.1);
-        border: 1px solid rgba(255, 255, 255, 0.2);
+        background: #229ED9;
+        border: none;
         cursor: pointer;
         transition: all 0.3s ease;
         color: white;
+        font-size: 16px;
         font-weight: 500;
+        margin-bottom: 20px;
+        gap: 10px;
       }
 
-      .wallet-button:hover {
-        background: rgba(255, 255, 255, 0.2);
+      .connect-button:hover {
+        background: #1C8AC0;
         transform: translateY(-2px);
       }
 
-      .wallet-button img {
-        width: 30px;
-        height: 30px;
-        margin-right: 15px;
+      .connect-button img {
+        width: 24px;
+        height: 24px;
       }
 
       .wallet-info {
@@ -86,6 +81,7 @@
         margin-top: 20px;
         word-break: break-all;
         display: none;
+        text-align: left;
       }
 
       .wallet-info.active {
@@ -103,74 +99,50 @@
         margin-top: 15px;
       }
 
-      .loading {
-        display: none;
-        color: white;
-        text-align: center;
-        padding: 20px;
-      }
-
-      .loading.active {
-        display: block;
-      }
-
       @keyframes fadeIn {
         from { opacity: 0; transform: translateY(-10px); }
         to { opacity: 1; transform: translateY(0); }
       }
 
-      @keyframes spin {
-        to { transform: rotate(360deg); }
-      }
-
-      .error-message {
-        color: #ff4444;
-        background: rgba(255, 68, 68, 0.1);
+      .status-message {
+        color: white;
+        background: rgba(0, 0, 0, 0.2);
         padding: 10px;
         border-radius: 8px;
         margin-top: 10px;
         display: none;
       }
 
-      .error-message.active {
+      .status-message.active {
         display: block;
+      }
+
+      @media (max-width: 480px) {
+        .container {
+          padding: 20px;
+        }
+
+        .header img {
+          width: 60px;
+          height: 60px;
+        }
       }
     </style>
   </head>
   <body>
     <div class="container">
       <div class="header">
-        <h1>TON Cüzdanını Bağla</h1>
-        <p>Aşağıdaki cüzdanlardan birini seçerek bağlanabilirsiniz</p>
+        <img src="https://telegram.org/img/t_logo.svg" alt="Telegram Logo">
+        <h1>Telegram TON Wallet</h1>
+        <p>Cüzdanınızı bağlamak için tıklayın</p>
       </div>
 
-      <div class="wallet-buttons">
-        <button class="wallet-button" onclick="connectWallet('tonkeeper')">
-          <img src="https://app.tonkeeper.com/favicon.ico" alt="TonKeeper">
-          TonKeeper ile Bağlan
-        </button>
-        
-        <button class="wallet-button" onclick="connectWallet('mytonwallet')">
-          <img src="https://mytonwallet.io/favicon.ico" alt="MyTonWallet">
-          MyTonWallet ile Bağlan
-        </button>
-        
-        <button class="wallet-button" onclick="connectWallet('tonhub')">
-          <img src="https://tonhub.com/favicon.ico" alt="Tonhub">
-          Tonhub ile Bağlan
-        </button>
+      <button class="connect-button" onclick="connectWallet()">
+        <img src="https://ton.org/assets/logo.svg" alt="TON Logo">
+        Cüzdanı Bağla
+      </button>
 
-        <button class="wallet-button" onclick="connectWallet('telegram')">
-          <img src="https://telegram.org/favicon.ico" alt="Telegram Wallet">
-          Telegram TON Wallet ile Bağlan
-        </button>
-      </div>
-
-      <div id="loading" class="loading">
-        Cüzdan bağlantısı bekleniyor...
-      </div>
-
-      <div id="error" class="error-message"></div>
+      <div id="statusMessage" class="status-message"></div>
 
       <div id="walletInfo" class="wallet-info">
         <h3>Bağlı Cüzdan Bilgileri</h3>
@@ -188,36 +160,14 @@
         manifestUrl: "https://testsiteton.netlify.app/tonconnect-manifest.json"
       });
 
-      const walletConfigs = {
-        tonkeeper: {
-          universalLink: "https://app.tonkeeper.com/ton-connect",
-          bridgeUrl: "https://bridge.tonapi.io/bridge"
-        },
-        mytonwallet: {
-          universalLink: "https://connect.mytonwallet.org",
-          bridgeUrl: "https://connect.mytonwallet.org/bridge"
-        },
-        tonhub: {
-          universalLink: "https://tonhub.com/ton-connect",
-          bridgeUrl: "https://connect.tonhub.com/bridge"
-        },
-        telegram: {
-          universalLink: "https://t.me/wallet?startattach=tonconnect",
-          bridgeUrl: "https://bridge.tonapi.io/bridge"
+      const showStatus = (message, isError = false) => {
+        const statusElement = document.getElementById('statusMessage');
+        statusElement.textContent = message;
+        statusElement.style.background = isError ? 'rgba(255, 0, 0, 0.2)' : 'rgba(0, 0, 0, 0.2)';
+        statusElement.classList.add('active');
+        if (!isError) {
+          setTimeout(() => statusElement.classList.remove('active'), 3000);
         }
-      };
-
-      let currentWallet = null;
-
-      const showLoading = (show) => {
-        document.getElementById('loading').classList.toggle('active', show);
-      };
-
-      const showError = (message) => {
-        const errorElement = document.getElementById('error');
-        errorElement.textContent = message;
-        errorElement.classList.add('active');
-        setTimeout(() => errorElement.classList.remove('active'), 5000);
       };
 
       const updateWalletInfo = (address, balance = null) => {
@@ -237,7 +187,7 @@
           const response = await fetch(`https://toncenter.com/api/v2/getAddressBalance?address=${address}`);
           const data = await response.json();
           if (data.ok) {
-            return (data.result / 1000000000).toFixed(2); // Convert from nanoTON to TON
+            return (data.result / 1000000000).toFixed(2);
           }
           return null;
         } catch (error) {
@@ -246,43 +196,41 @@
         }
       };
 
-      const connectWallet = async (walletType) => {
-        if (!walletConfigs[walletType]) {
-          showError('Bu cüzdan türü desteklenmiyor');
-          return;
-        }
+      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
-        showLoading(true);
+      const connectWallet = async () => {
         try {
-          const walletConnectionSource = walletConfigs[walletType];
-          const universalLink = connector.connect(walletConnectionSource);
-          
-          if (walletType === 'telegram') {
-            // Telegram için özel işlem
+          const walletConnectionSource = {
+            universalLink: "https://t.me/wallet?startattach=tonconnect",
+            bridgeUrl: "https://bridge.tonapi.io/bridge"
+          };
+
+          if (isMobile) {
+            // Mobil cihazlarda direkt Telegram uygulamasına yönlendir
             window.location.href = walletConnectionSource.universalLink;
           } else {
-            window.open(universalLink, "_blank");
+            // Masaüstünde yeni sekmede aç
+            window.open(walletConnectionSource.universalLink, '_blank');
           }
-          
-          currentWallet = walletType;
+
+          showStatus('Cüzdan bağlantısı bekleniyor...');
         } catch (error) {
-          showError('Cüzdan bağlantısı başlatılırken hata oluştu');
+          showStatus('Bağlantı hatası oluştu', true);
           console.error('Connection error:', error);
         }
-        showLoading(false);
       };
 
       connector.onStatusChange(async (status) => {
         console.log("Bağlantı durumu değişti:", status);
-        showLoading(false);
-
+        
         if (status) {
           const rawAddress = status.account.address;
           try {
             const balance = await getBalance(rawAddress);
             updateWalletInfo(rawAddress, balance);
+            showStatus('Cüzdan başarıyla bağlandı!');
           } catch (error) {
-            showError('Cüzdan bilgileri alınırken hata oluştu');
+            showStatus('Cüzdan bilgileri alınamadı', true);
             console.error('Wallet info error:', error);
           }
         } else {
