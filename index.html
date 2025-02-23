@@ -4,14 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TON Cüzdan Bağlantısı</title>
-    <script src="https://cdn.jsdelivr.net/npm/@tonconnect/sdk@latest"></script>
 </head>
 <body>
     <h1>TON Cüzdan Bağlantısı</h1>
     <button id="connectButton">Cüzdan Bağla</button>
     <p id="walletAddress"></p>
 
-    <script>
+    <script type="module">
+        import { TonConnect } from "https://cdn.jsdelivr.net/npm/@tonconnect/sdk@3.0.4/+esm";
+
         const tonConnect = new TonConnect();
 
         document.getElementById("connectButton").addEventListener("click", async () => {
