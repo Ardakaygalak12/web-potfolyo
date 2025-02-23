@@ -257,6 +257,8 @@
         const telegram = window.Telegram.WebApp;
         let walletAddress = null;
         let nextMiningTime = 0;
+        let lastLoginCheck = 0;
+        const LOGIN_CHECK_INTERVAL = 10000; // 10 saniye
 
         let gameState = {
             minerals: 0,
@@ -265,8 +267,13 @@
             miningHistory: []
         };
 
-        // Oyuncuyu başlat
         async function initializePlayer() {
+            const now = Date.now();
+            if (now - lastLoginCheck < LOGIN_CHECK_INTERVAL) {
+                return;
+            }
+            
+            lastLoginCheck = now;
             try {
                 const response = await fetch(`${API_URL}/player/login`, {
                     method: 'POST',
@@ -413,8 +420,8 @@
 
                 const result = await response.json();
                 
-                gameState.minerals += result.reward;
-                nextMiningTime = result.nextMiningTime * 1000; // Convert to milliseconds
+                gameState.minerals = result.totalMinerals;
+                nextMiningTime = result.nextMiningTime * 1000;
                 
                 gameState.miningHistory.unshift({
                     timestamp: Date.now(),
@@ -458,95 +465,97 @@
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
-                            telegramId: telegram.initDataUnsafe.user.id,
-                            minerals: gameState.minerals,
-                            power: gameState.power
-                        })
-                    });
+                           telegramId: telegram.initDataUnsafe.user.id,
+                           minerals: gameState.minerals,
+                           power: gameState.power
+                       })
+                   });
 
-                    updateDisplay();
-                    telegram.hapticFeedback.impactOccurred('heavy');
-                    telegram.showPopup({
-                        title: 'Yükseltme Başarılı!',
-                        message: `Gemi gücü ${gameState.power} seviyesine yükseltildi! 🚀`,
-                        buttons: [{type: 'ok'}]
-                    });
-                } catch (error) {
-                    console.error('Upgrade error:', error);
-                    // Hata durumunda değerleri geri al
-                    gameState.minerals += cost;
-                    gameState.power -= 1;
-                    telegram.showPopup({
-                        title: 'Hata',
-                        message: 'Yükseltme başarısız!',
-                        buttons: [{type: 'ok'}]
-                    });
-                }
-            } else {
-                telegram.hapticFeedback.notificationOccurred('error');
-                telegram.showPopup({
-                    title: 'Yetersiz Mineral',
-                    message: 'Yükseltme için yeterli mineralin yok!',
-                    buttons: [{type: 'ok'}]
-                });
-            }
-        }
+                   updateDisplay();
+                   telegram.hapticFeedback.impactOccurred('heavy');
+                   telegram.showPopup({
+                       title: 'Yükseltme Başarılı!',
+                       message: `Gemi gücü ${gameState.power} seviyesine yükseltildi! 🚀`,
+                       buttons: [{type: 'ok'}]
+                   });
+               } catch (error) {
+                   console.error('Upgrade error:', error);
+                   // Hata durumunda değerleri geri al
+                   gameState.minerals += cost;
+                   gameState.power -= 1;
+                   telegram.showPopup({
+                       title: 'Hata',
+                       message: 'Yükseltme başarısız!',
+                       buttons: [{type: 'ok'}]
+                   });
+               }
+           } else {
+               telegram.hapticFeedback.notificationOccurred('error');
+               telegram.showPopup({
+                   title: 'Yetersiz Mineral',
+                   message: 'Yükseltme için yeterli mineralin yok!',
+                   buttons: [{type: 'ok'}]
+               });
+           }
+       }
 
-        async function purchaseMinerals() {
-            if (!walletAddress) {
-                telegram.showPopup({
-                    title: 'Hata',
-                    message: 'Önce cüzdan bağlayın!',
-                    buttons: [{type: 'ok'}]
-                });
-                return;
-            }
+       async function purchaseMinerals() {
+           if (!walletAddress) {
+               telegram.showPopup({
+                   title: 'Hata',
+                   message: 'Önce cüzdan bağlayın!',
+                   buttons: [{type: 'ok'}]
+               });
+               return;
+           }
 
-            try {
-                const provider = window.ton;
-                const result = await provider.send('ton_sendTransaction', [{
-                    to: 'UQBoTE6mAMlmLCF8uYWCu3TGYqTvbrRKdBxOASpY0oM6UhcJ',
-                    value: '100000000' // 0.1 TON
-                }]);
+           try {
+               const provider = window.ton;
+               const result = await provider.send('ton_sendTransaction', [{
+                   to: 'UQBoTE6mAMlmLCF8uYWCu3TGYqTvbrRKdBxOASpY0oM6UhcJ',
+                   value: '100000000' // 0.1 TON
+               }]);
 
-                // İşlem hash'i ile backend'e istek at
-                const response = await fetch(`${API_URL}/purchase`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        telegramId: telegram.initDataUnsafe.user.id,
-                        transactionHash: result.transactionHash,
-                        amount: 0.1 // TON miktarı
-                    })
-                });
+               const response = await fetch(`${API_URL}/purchase`, {
+                   method: 'POST',
+                   headers: { 'Content-Type': 'application/json' },
+                   body: JSON.stringify({
+                       telegramId: telegram.initDataUnsafe.user.id,
+                       transactionHash: result.transactionHash,
+                       amount: 0.1
+                   })
+               });
 
-                if (response.ok) {
-                    const data = await response.json();
-                    gameState.minerals = data.minerals;
-                    updateDisplay();
-                    telegram.showPopup({
-                        title: 'Başarılı',
-                        message: '100 mineral satın alındı! 💎',
-                        buttons: [{type: 'ok'}]
-                    });
-                }
-            } catch (error) {
-                console.error('Purchase error:', error);
-                telegram.showPopup({
-                    title: 'Hata',
-                    message: 'Satın alma işlemi başarısız!',
-                    buttons: [{type: 'ok'}]
-                });
-            }
-        }
+               if (response.ok) {
+                   const data = await response.json();
+                   gameState.minerals = data.minerals;
+                   updateDisplay();
+                   telegram.showPopup({
+                       title: 'Başarılı',
+                       message: '100 mineral satın alındı! 💎',
+                       buttons: [{type: 'ok'}]
+                   });
+               }
+           } catch (error) {
+               console.error('Purchase error:', error);
+               telegram.showPopup({
+                   title: 'Hata',
+                   message: 'Satın alma işlemi başarısız!',
+                   buttons: [{type: 'ok'}]
+               });
+           }
+       }
 
-        // Cooldown timer'ı güncelle
-        setInterval(updateCooldownTimer, 1000);
+       // Her 1 saniyede bir cooldown timer'ı güncelle ve oyuncu verilerini kontrol et
+       setInterval(() => {
+           updateCooldownTimer();
+           initializePlayer();
+       }, 1000);
 
-        // Oyunu başlat
-        telegram.ready();
-        telegram.expand();
-        initializePlayer();
-    </script>
+       // Oyunu başlat
+       telegram.ready();
+       telegram.expand();
+       initializePlayer();
+   </script>
 </body>
 </html>
