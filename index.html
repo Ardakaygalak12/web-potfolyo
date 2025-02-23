@@ -138,16 +138,17 @@
     <script>
         const appUrl = "https://cryptominergames.netlify.app/";
 
-        // Universal link ile bağlantı
-        async function connectWithUniversalLink() {
-            const universalLink = `https://app.tonkeeper.com/connect?ret=back&v=2&r=${encodeURIComponent(appUrl)}`;
-            
-            if (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
-                window.location.href = universalLink; // Mobilde aç
-            } else {
-                window.location.href = `ton://connect?ret=back&v=2&r=${encodeURIComponent(appUrl)}`; // Masaüstünde aç
-            }
-        }
+       async function connectWithUniversalLink() {
+    const universalLink = `https://app.tonkeeper.com/ton-connect?ret=${encodeURIComponent(appUrl)}`;
+
+    // Mobil cihaz mı kontrol et
+    if (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+        window.location.href = universalLink;
+    } else {
+        window.open(universalLink, '_blank');
+    }
+}
+
 
         // UI Elementleri
         const connectButton = document.getElementById('connectButton');
