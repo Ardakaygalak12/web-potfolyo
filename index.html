@@ -3,21 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TonKeeper Connect</title>
-    <script src="https://cdn.jsdelivr.net/npm/@tonconnect/sdk@latest/dist/tonconnect-sdk.js"></script>
+    <title>TonKeeper Connect (SDK)</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tonconnect/sdk@latest/dist/tonconnect-sdk.min.js"></script>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-family: 'Segoe UI', Roboto, sans-serif;
         }
 
         body {
             display: flex;
             justify-content: center;
             align-items: center;
-            min-height: 100vh;
+            height: 100vh;
             background: #f5f5f5;
         }
 
@@ -27,7 +27,7 @@
             background: white;
             border-radius: 12px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            min-width: 300px;
+            width: 320px;
         }
 
         .connect-button {
@@ -37,19 +37,15 @@
             padding: 12px 24px;
             border-radius: 8px;
             font-size: 16px;
-            font-weight: 600;
+            font-weight: bold;
             cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            transition: all 0.3s;
+            transition: 0.3s;
             width: 100%;
-            justify-content: center;
+            margin-bottom: 12px;
         }
 
         .connect-button:hover {
             background: #006699;
-            transform: translateY(-1px);
         }
 
         .wallet-info {
@@ -58,6 +54,7 @@
             background: #f8f9fa;
             padding: 12px;
             border-radius: 8px;
+            text-align: center;
         }
 
         .wallet-address {
@@ -70,142 +67,74 @@
             background: #ff4444;
             color: white;
             border: none;
-            padding: 8px 16px;
+            padding: 10px;
             border-radius: 6px;
-            margin-top: 12px;
             cursor: pointer;
-            transition: all 0.3s;
+            margin-top: 10px;
             width: 100%;
-            font-weight: 600;
         }
 
         .disconnect-button:hover {
             background: #cc0000;
         }
-
-        .status-dot {
-            width: 8px;
-            height: 8px;
-            background: #4caf50;
-            border-radius: 50%;
-            display: inline-block;
-            margin-right: 8px;
-        }
-
-        .error-message {
-            display: none;
-            background: #ffebee;
-            color: #c62828;
-            padding: 12px;
-            border-radius: 6px;
-            margin-bottom: 16px;
-            font-size: 14px;
-        }
-
-        .address-container {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 12px;
-            background: white;
-            padding: 8px;
-            border-radius: 6px;
-            border: 1px solid #eee;
-        }
     </style>
 </head>
 <body>
     <div class="wallet-container">
-        <div class="error-message" id="errorMessage"></div>
-        
-        <button class="connect-button" id="connectButton">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                      d="M13 10V3L4 14h7v7l9-11h-7z"/>
-            </svg>
-            TonKeeper Bağla
-        </button>
+        <h1>TonKeeper Bağlantısı</h1>
+
+        <!-- Bağlan ve Bilgi Alanı -->
+        <button class="connect-button" id="connectButton">TonKeeper ile Bağlan</button>
 
         <div class="wallet-info" id="walletInfo">
-            <div class="address-container">
-                <span class="status-dot"></span>
-                <span class="wallet-address" id="walletAddress"></span>
-            </div>
+            <p>Cüzdan Adresi:</p>
+            <p class="wallet-address" id="walletAddress"></p>
             <button class="disconnect-button" id="disconnectButton">Bağlantıyı Kes</button>
         </div>
     </div>
 
     <script>
-        const appUrl = "https://cryptominergames.netlify.app/";
+        const tonConnect = new TonConnectSDK.TonConnect({
+            manifestUrl: "https://cryptominergames.netlify.app/tonconnect-manifest.json"
+        });
 
-       async function connectWithUniversalLink() {
-    const universalLink = `https://app.tonkeeper.com/ton-connect?ret=${encodeURIComponent(appUrl)}`;
-
-    // Mobil cihaz mı kontrol et
-    if (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
-        window.location.href = universalLink;
-    } else {
-        window.open(universalLink, '_blank');
-    }
-}
-
-
-        // UI Elementleri
         const connectButton = document.getElementById('connectButton');
         const walletInfo = document.getElementById('walletInfo');
         const walletAddress = document.getElementById('walletAddress');
         const disconnectButton = document.getElementById('disconnectButton');
-        const errorMessage = document.getElementById('errorMessage');
 
-        function showError(message, duration = 5000) {
-            errorMessage.textContent = message;
-            errorMessage.style.display = 'block';
-            setTimeout(() => errorMessage.style.display = 'none', duration);
-        }
-
-        function shortenAddress(address) {
-            if (!address) return '';
-            return `${address.slice(0, 6)}...${address.slice(-4)}`;
-        }
-
-        function updateUI(address) {
-            if (address) {
-                connectButton.style.display = 'none';
-                walletInfo.style.display = 'block';
-                walletAddress.textContent = shortenAddress(address);
-            } else {
-                connectButton.style.display = 'flex';
-                walletInfo.style.display = 'none';
-                walletAddress.textContent = '';
-            }
-        }
-
-        function checkAddressInUrl() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const address = urlParams.get('address');
-            if (address) {
-                localStorage.setItem('ton_wallet_address', address);
-                updateUI(address);
-                window.history.replaceState({}, document.title, window.location.pathname);
-            }
-            return address;
-        }
-
-        function disconnectWallet() {
-            localStorage.removeItem('ton_wallet_address');
-            updateUI(null);
-        }
-
-        window.addEventListener('load', () => {
-            const urlAddress = checkAddressInUrl();
-            if (!urlAddress) {
-                const savedAddress = localStorage.getItem('ton_wallet_address');
-                if (savedAddress) updateUI(savedAddress);
+        // Cüzdanı Bağla
+        connectButton.addEventListener('click', async () => {
+            try {
+                const walletConnection = await tonConnect.connectWallet();
+                const address = walletConnection?.account?.address;
+                if (address) {
+                    walletAddress.textContent = address;
+                    walletInfo.style.display = 'block';
+                    connectButton.style.display = 'none';
+                }
+            } catch (error) {
+                alert('Bağlantı hatası: ' + error.message);
             }
         });
 
-        connectButton.addEventListener('click', connectWithUniversalLink);
-        disconnectButton.addEventListener('click', disconnectWallet);
+        // Bağlantıyı Kes
+        disconnectButton.addEventListener('click', () => {
+            tonConnect.disconnect();
+            walletInfo.style.display = 'none';
+            connectButton.style.display = 'block';
+            walletAddress.textContent = '';
+        });
+
+        // Sayfa Yüklendiğinde Bağlantı Kontrolü
+        window.addEventListener('load', async () => {
+            const isConnected = await tonConnect.restoreConnection();
+            if (isConnected && tonConnect.account) {
+                walletAddress.textContent = tonConnect.account.address;
+                walletInfo.style.display = 'block';
+                connectButton.style.display = 'none';
+            }
+        });
     </script>
 </body>
 </html>
