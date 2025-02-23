@@ -3,10 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- Önbellek önleyici meta tagları -->
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-    <meta http-equiv="Pragma" content="no-cache">
-    <meta http-equiv="Expires" content="0">
     <title>TON Wallet Connect</title>
     <style>
         body {
@@ -16,21 +12,23 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            background: #1c1c1c;
+            background: linear-gradient(135deg, #0088cc, #004466);
             font-family: Arial, sans-serif;
         }
 
         .container {
-            background: #2c2c2c;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
             padding: 30px;
             border-radius: 20px;
             max-width: 400px;
             width: 100%;
             text-align: center;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
         }
 
         .connect-button {
-            background: #31a6f5;
+            background: #229ED9;
             color: white;
             border: none;
             padding: 15px 30px;
@@ -39,11 +37,16 @@
             cursor: pointer;
             margin: 20px 0;
             width: 100%;
-            transition: background 0.3s;
+            transition: all 0.3s ease;
         }
 
         .connect-button:hover {
-            background: #2b95dd;
+            background: #1C8AC0;
+            transform: translateY(-2px);
+        }
+
+        .connect-button:active {
+            transform: translateY(0px);
         }
 
         .title {
@@ -52,20 +55,10 @@
         }
 
         #status {
-            color: #fff;
-            margin-top: 15px;
-        }
-
-        /* Mobil için özel temizleme butonu */
-        .clear-cache {
-            background: #666;
             color: white;
-            border: none;
-            padding: 10px;
-            border-radius: 5px;
-            margin-top: 10px;
-            font-size: 12px;
-            cursor: pointer;
+            margin-top: 15px;
+            word-break: break-all;
+            font-size: 14px;
         }
     </style>
 </head>
@@ -76,44 +69,32 @@
             Telegram Cüzdanını Bağla
         </button>
         <div id="status"></div>
-        <button class="clear-cache" onclick="clearCache()">Önbelleği Temizle</button>
     </div>
 
     <script>
-        // Önbelleği temizleme fonksiyonu
-        function clearCache() {
-            // URL'e rastgele parametre ekleyerek önbelleği bypass et
-            const timestamp = new Date().getTime();
-            const newUrl = window.location.href.split('?')[0] + '?t=' + timestamp;
-            window.location.href = newUrl;
-        }
-
         function connectWallet() {
             const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
             
-            // Direkt Telegram protokolü üzerinden bağlan
-            const baseUrl = isMobile ? 'https://t.me/wallet/' : 'tg://wallet/';
-            const startApp = 'start?startapp=';
-            const connectParams = encodeURIComponent(JSON.stringify({
+            const params = {
+                v: "1.0",
                 name: "TON Connect Test",
-                url: "https://testsiteton.netlify.app"
-            }));
+                url: window.location.origin
+            };
             
-            const finalUrl = baseUrl + startApp + connectParams;
-            
+            // Telegram için özel bağlantı
+            const baseUrl = isMobile 
+                ? 'https://t.me/wallet/start' 
+                : 'tg://resolve?domain=wallet&startapp=';
+                
+            // Parametreleri ekle
+            const fullUrl = baseUrl + (isMobile ? '?startapp=' : '') + 
+                encodeURIComponent('connect-' + btoa(JSON.stringify(params)));
+
             // Yeni sekmede aç
-            window.open(finalUrl, '_blank');
+            window.location.href = fullUrl;
             
             document.getElementById('status').textContent = 'Telegram Wallet açılıyor...';
         }
-
-        // Sayfa yüklendiğinde önbelleği kontrol et
-        window.onload = function() {
-            // Önbellek durumunu kontrol et
-            if (performance.navigation.type === 1) {
-                document.getElementById('status').textContent = 'Sayfa yenilendi, önbellek temizlendi';
-            }
-        };
     </script>
 </body>
 </html>
