@@ -3,33 +3,91 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ton Wallet Bağlantısı</title>
+    <title>TON Faucet</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tonconnect/sdk@latest"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 20px;
+            background-color: #f0f0f0;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            margin: 10px;
+            cursor: pointer;
+        }
+    </style>
 </head>
 <body>
-    <h1>Ton Wallet Bağlantısı</h1>
+    <h1>TON Faucet</h1>
+    <div id="walletInfo"></div>
     <button id="connectButton">Cüzdanı Bağla</button>
-    <p id="walletAddress"></p>
+    <button id="disconnectButton" style="display:none;">Bağlantıyı Kes</button>
 
     <script>
-        document.getElementById("connectButton").addEventListener("click", async () => {
-            if (window.ton) {
-                try {
-                    const accounts = await window.ton.send("ton_requestAccounts");
-                    const walletAddress = accounts?.[0];
-                    if (walletAddress) {
-                        document.getElementById("walletAddress").innerText = "Cüzdan Bağlandı: " + walletAddress;
-                        console.log("Bağlı Cüzdan: ", walletAddress);
-                    } else {
-                        alert("Cüzdan bağlantısı reddedildi.");
-                    }
-                } catch (error) {
-                    console.error("Bağlantı hatası:", error);
-                    alert("Cüzdan bağlanırken hata oluştu.");
-                }
-            } else {
-                alert("Ton Wallet yüklü değil. Lütfen eklentiyi kurun.");
+        let tonConnect;
+        try {
+            tonConnect = new TonConnect.TonConnect({
+                manifestUrl: 'https://cryptominergames.vercel.app/tonconnect-manifest.json'
+            });
+        } catch (error) {
+            console.error("TonConnect başlatma hatası:", error.message || error);
+            alert(`TonConnect başlatma hatası: ${error.message || error}`);
+        }
+
+        const walletInfoDiv = document.getElementById('walletInfo');
+        const connectButton = document.getElementById('connectButton');
+        const disconnectButton = document.getElementById('disconnectButton');
+
+        async function connectWallet() {
+            if (!tonConnect) {
+                alert("TonConnect başlatılamadı.");
+                return;
             }
-        });
+
+            try {
+                const wallets = await tonConnect.getWallets();
+                if (!wallets || wallets.length === 0) throw new Error("Hiçbir cüzdan bulunamadı.");
+
+                const link = await tonConnect.connect({
+                    universalLink: wallets[0].universalLink,
+                    returnStrategy: 'back'
+                });
+                window.open(link, '_blank');
+            } catch (error) {
+                console.error("Cüzdan bağlama hatası:", error.message || error);
+                alert(`Cüzdan bağlama hatası: ${error.message || error}`);
+            }
+        }
+
+        function disconnectWallet() {
+            if (tonConnect) {
+                tonConnect.disconnect();
+                walletInfoDiv.innerHTML = '';
+                connectButton.style.display = 'inline-block';
+                disconnectButton.style.display = 'none';
+            }
+        }
+
+        connectButton.addEventListener('click', connectWallet);
+        disconnectButton.addEventListener('click', disconnectWallet);
+
+        (async () => {
+            if (tonConnect) {
+                try {
+                    const walletInfo = await tonConnect.restoreConnection();
+                    if (walletInfo) {
+                        walletInfoDiv.innerHTML = `Cüzdan Bağlı: ${walletInfo.account?.address}`;
+                        connectButton.style.display = 'none';
+                        disconnectButton.style.display = 'inline-block';
+                    }
+                } catch (err) {
+                    console.error("Bağlantı hatası:", err);
+                }
+            }
+        })();
     </script>
 </body>
 </html>
