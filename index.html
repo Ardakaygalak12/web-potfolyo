@@ -1,106 +1,31 @@
 <!DOCTYPE html>
-<html lang="tr">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ton Connect SDK Bağlantısı</title>
-    <script src="https://cdn.jsdelivr.net/npm/@tonconnect/sdk@latest/dist/tonconnect-sdk.min.js"></script>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            background-color: #f8f8f8;
-        }
-        .container {
-            background-color: white;
-            padding: 20px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            border-radius: 10px;
-            text-align: center;
-            width: 350px;
-        }
-        button {
-            padding: 10px 20px;
-            margin: 10px 0;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        #connectButton {
-            background-color: #0088cc;
-            color: white;
-        }
-        #disconnectButton {
-            background-color: #ff4444;
-            color: white;
-        }
-        #walletInfo {
-            margin-top: 20px;
-            padding: 10px;
-            background-color: #e6f7ff;
-            border: 1px solid #91d5ff;
-            border-radius: 5px;
-        }
-    </style>
+    <title>TON Wallet Connect</title>
 </head>
 <body>
-    <div class="container">
-        <h1>Ton Cüzdan Bağlantısı</h1>
-        <button id="connectButton">Cüzdana Bağlan</button>
-        <div id="walletInfo" style="display:none;">
-            <p><strong>Bağlı Cüzdan:</strong> <span id="walletAddress"></span></p>
-            <button id="disconnectButton">Bağlantıyı Kes</button>
-        </div>
-    </div>
+    <h1>TON Cüzdan Bağlantısı</h1>
+    <button id="connect">Cüzdanı Bağla</button>
+    <script type="module">
+        import { TonConnect } from '@tonconnect/sdk';
 
-    <script>
-        const tonConnect = new TonConnectSDK.TonConnect({
-            manifestUrl: "https://cryptominergames.netlify.app/tonconnect-manifest.json"
+        const tonConnect = new TonConnect({
+            manifestUrl: 'https://cryptominergames.vercel.app/tonconnect-manifest.json'
         });
 
-        const connectButton = document.getElementById("connectButton");
-        const disconnectButton = document.getElementById("disconnectButton");
-        const walletInfo = document.getElementById("walletInfo");
-        const walletAddress = document.getElementById("walletAddress");
-
-        async function connectWallet() {
+        document.getElementById('connect').addEventListener('click', async () => {
             try {
-                const connection = await tonConnect.connectWallet();
-                if (connection?.account?.address) {
-                    walletAddress.innerText = connection.account.address;
-                    walletInfo.style.display = "block";
-                    connectButton.style.display = "none";
+                const connected = await tonConnect.connect();
+                if (connected) {
+                    alert('Cüzdan başarıyla bağlandı!');
                 } else {
-                    alert("Cüzdan adresi alınamadı.");
+                    alert('Cüzdan bağlantısı reddedildi.');
                 }
             } catch (error) {
-                console.error("Bağlantı hatası:", error);
-                alert("Cüzdan bağlanırken hata oluştu. Cüzdanınızın yüklü olduğundan ve izin verdiğinizden emin olun.");
-            }
-        }
-
-        function disconnectWallet() {
-            tonConnect.disconnect();
-            walletInfo.style.display = "none";
-            connectButton.style.display = "block";
-            walletAddress.innerText = "";
-        }
-
-        // Olayları dinle
-        connectButton.addEventListener("click", connectWallet);
-        disconnectButton.addEventListener("click", disconnectWallet);
-
-        // Sayfa yüklenirken bağlantıyı kontrol et
-        window.addEventListener("load", async () => {
-            const isConnected = await tonConnect.restoreConnection();
-            if (isConnected && tonConnect.account) {
-                walletAddress.innerText = tonConnect.account.address;
-                walletInfo.style.display = "block";
-                connectButton.style.display = "none";
+                console.error('Bağlantı hatası:', error);
+                alert('Cüzdan bağlanırken hata oluştu. Lütfen tekrar deneyin.');
             }
         });
     </script>
