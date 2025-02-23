@@ -181,6 +181,13 @@
             font-weight: bold;
             color: #4c00ff;
         }
+
+        .wallet-status {
+            font-size: 12px;
+            margin-top: 5px;
+            text-align: center;
+            color: #999;
+        }
     </style>
 </head>
 <body>
@@ -198,6 +205,7 @@
         <button class="button wallet-button" onclick="connectWallet()" id="walletButton">
             Cüzdan Bağla
         </button>
+        <div id="walletStatus" class="wallet-status"></div>
 
         <button class="button" onclick="mine()" id="mineButton">
             Madencilik Yap
@@ -226,7 +234,6 @@
 
         <div class="history" id="miningHistory">
             <div class="history-title">Madencilik Geçmişi</div>
-            <!-- Geçmiş kayıtları buraya eklenecek -->
         </div>
     </div>
 
@@ -238,7 +245,7 @@
     </div>
 
     <script>
-        const API_URL = 'http://localhost:3000'; // Backend sunucu adresi
+        const API_URL = 'http://localhost:3000';
         const telegram = window.Telegram.WebApp;
         let walletAddress = null;
 
@@ -249,6 +256,33 @@
             miningHistory: []
         };
 
+        // Initialize player data on page load
+        async function initializePlayer() {
+            try {
+                const response = await fetch(`${API_URL}/player/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        telegramId: telegram.initDataUnsafe.user.id
+                    })
+                });
+
+                if (response.ok) {
+                    const player = await response.json();
+                    gameState.minerals = player.minerals;
+                    gameState.power = player.power;
+                    if (player.walletAddress) {
+                        walletAddress = player.walletAddress;
+                        document.getElementById('walletButton').textContent = 'Cüzdan Bağlı ✅';
+                        updateWalletStatus(player.walletAddress);
+                    }
+                    updateDisplay();
+                }
+            } catch (error) {
+                console.error('Initialization error:', error);
+            }
+        }
+
         function updateDisplay() {
             document.getElementById('minerals').textContent = gameState.minerals;
             document.getElementById('power').textContent = gameState.power;
@@ -256,6 +290,16 @@
             document.getElementById('totalMinerals').textContent = gameState.minerals;
             document.getElementById('shipPower').textContent = gameState.power;
             updateMiningHistory();
+        }
+
+        function updateWalletStatus(address) {
+            const statusElement = document.getElementById('walletStatus');
+            if (address) {
+                const shortAddress = `${address.slice(0, 6)}...${address.slice(-4)}`;
+                statusElement.textContent = `Bağlı Cüzdan: ${shortAddress}`;
+            } else {
+                statusElement.textContent = '';
+            }
         }
 
         function updateMiningHistory() {
@@ -299,6 +343,7 @@
 
                 if (response.ok) {
                     document.getElementById('walletButton').textContent = 'Cüzdan Bağlı ✅';
+                    updateWalletStatus(walletAddress);
                     telegram.showPopup({
                         title: 'Başarılı',
                         message: 'Cüzdan bağlandı!',
@@ -306,6 +351,7 @@
                     });
                 }
             } catch (error) {
+                console.error('Wallet connection error:', error);
                 telegram.showPopup({
                     title: 'Hata',
                     message: 'Cüzdan bağlama hatası!',
@@ -334,6 +380,21 @@
                     gameState.miningHistory.pop();
                 }
 
+                // Save progress
+                try {
+                    await fetch(`${API_URL}/player/save`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            telegramId: telegram.initDataUnsafe.user.id,
+                            minerals: gameState.minerals,
+                            power: gameState.power
+                        })
+                    });
+                } catch (error) {
+                    console.error('Error saving progress:', error);
+                }
+
                 updateDisplay();
                 gameState.isMining = false;
                 document.getElementById('mineButton').disabled = false;
@@ -348,11 +409,27 @@
             }, 3000);
         }
 
-        function upgrade() {
+        async function upgrade() {
             const cost = gameState.power * 100;
             if (gameState.minerals >= cost) {
                 gameState.minerals -= cost;
                 gameState.power += 1;
+
+                // Save progress after upgrade
+                try {
+                    await fetch(`${API_URL}/player/save`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            telegramId: telegram.initDataUnsafe.user.id,
+                            minerals: gameState.minerals,
+                            power: gameState.power
+                        })
+                    });
+                } catch (error) {
+                    console.error('Error saving progress:', error);
+                }
+
                 updateDisplay();
                 telegram.hapticFeedback.impactOccurred('heavy');
                 telegram.showPopup({
@@ -407,6 +484,7 @@
                     });
                 }
             } catch (error) {
+                console.error('Purchase error:', error);
                 telegram.showPopup({
                     title: 'Hata',
                     message: 'Satın alma işlemi başarısız!',
@@ -415,10 +493,10 @@
             }
         }
 
-        // Oyunu başlat
+        // Initialize game
         telegram.ready();
         telegram.expand();
-        updateDisplay();
+        initializePlayer();
     </script>
 </body>
 </html>
