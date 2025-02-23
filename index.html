@@ -182,11 +182,18 @@
             color: #4c00ff;
         }
 
+        #cooldownTimer {
+            font-size: 14px;
+            color: #999;
+            text-align: center;
+            margin-top: 5px;
+        }
+
         .wallet-status {
             font-size: 12px;
-            margin-top: 5px;
-            text-align: center;
             color: #999;
+            text-align: center;
+            margin-top: 5px;
         }
     </style>
 </head>
@@ -210,6 +217,7 @@
         <button class="button" onclick="mine()" id="mineButton">
             Madencilik Yap
         </button>
+        <div id="cooldownTimer"></div>
 
         <button class="button upgrade-button" onclick="upgrade()" id="upgradeButton">
             Gemi Güçlendir (<span id="upgradeCost">100</span> 💎)
@@ -248,6 +256,7 @@
         const API_URL = 'http://localhost:3000';
         const telegram = window.Telegram.WebApp;
         let walletAddress = null;
+        let nextMiningTime = 0;
 
         let gameState = {
             minerals: 0,
@@ -256,7 +265,7 @@
             miningHistory: []
         };
 
-        // Initialize player data on page load
+        // Oyuncuyu başlat
         async function initializePlayer() {
             try {
                 const response = await fetch(`${API_URL}/player/login`, {
@@ -290,6 +299,7 @@
             document.getElementById('totalMinerals').textContent = gameState.minerals;
             document.getElementById('shipPower').textContent = gameState.power;
             updateMiningHistory();
+            updateCooldownTimer();
         }
 
         function updateWalletStatus(address) {
@@ -315,6 +325,20 @@
                 <div class="history-title">Madencilik Geçmişi</div>
                 ${historyHtml}
             `;
+        }
+
+        function updateCooldownTimer() {
+            const timerElement = document.getElementById('cooldownTimer');
+            const now = Date.now();
+
+            if (nextMiningTime > now) {
+                const remaining = Math.ceil((nextMiningTime - now) / 1000);
+                timerElement.textContent = `Sonraki madencilik için: ${remaining} saniye`;
+                document.getElementById('mineButton').disabled = true;
+            } else {
+                timerElement.textContent = '';
+                document.getElementById('mineButton').disabled = false;
+            }
         }
 
         async function connectWallet() {
@@ -363,50 +387,64 @@
         async function mine() {
             if (gameState.isMining) return;
             
-            gameState.isMining = true;
-            document.getElementById('mineButton').disabled = true;
-            document.getElementById('miningAnimation').style.display = 'flex';
-            telegram.hapticFeedback.impactOccurred('medium');
+            try {
+                const response = await fetch(`${API_URL}/mine`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        telegramId: telegram.initDataUnsafe.user.id
+                    })
+                });
 
-            setTimeout(async () => {
-                const reward = Math.floor(Math.random() * 10 * gameState.power) + 1;
-                gameState.minerals += reward;
+                if (!response.ok) {
+                    const error = await response.json();
+                    telegram.showPopup({
+                        title: 'Hata',
+                        message: error.error,
+                        buttons: [{type: 'ok'}]
+                    });
+                    return;
+                }
+
+                gameState.isMining = true;
+                document.getElementById('mineButton').disabled = true;
+                document.getElementById('miningAnimation').style.display = 'flex';
+                telegram.hapticFeedback.impactOccurred('medium');
+
+                const result = await response.json();
+                
+                gameState.minerals += result.reward;
+                nextMiningTime = result.nextMiningTime * 1000; // Convert to milliseconds
+                
                 gameState.miningHistory.unshift({
                     timestamp: Date.now(),
-                    amount: reward
+                    amount: result.reward
                 });
                 
                 if (gameState.miningHistory.length > 5) {
                     gameState.miningHistory.pop();
                 }
 
-                // Save progress
-                try {
-                    await fetch(`${API_URL}/player/save`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            telegramId: telegram.initDataUnsafe.user.id,
-                            minerals: gameState.minerals,
-                            power: gameState.power
-                        })
-                    });
-                } catch (error) {
-                    console.error('Error saving progress:', error);
-                }
-
                 updateDisplay();
-                gameState.isMining = false;
-                document.getElementById('mineButton').disabled = false;
-                document.getElementById('miningAnimation').style.display = 'none';
-
+                
                 telegram.hapticFeedback.notificationOccurred('success');
                 telegram.showPopup({
                     title: 'Başarılı!',
-                    message: `${reward} mineral kazandın! 🎉`,
+                    message: `${result.reward} mineral kazandın! 🎉`,
                     buttons: [{type: 'ok'}]
                 });
-            }, 3000);
+
+            } catch (error) {
+                console.error('Mining error:', error);
+                telegram.showPopup({
+                    title: 'Hata',
+                    message: 'Madencilik hatası!',
+                    buttons: [{type: 'ok'}]
+                });
+            } finally {
+                gameState.isMining = false;
+                document.getElementById('miningAnimation').style.display = 'none';
+            }
         }
 
         async function upgrade() {
@@ -415,7 +453,6 @@
                 gameState.minerals -= cost;
                 gameState.power += 1;
 
-                // Save progress after upgrade
                 try {
                     await fetch(`${API_URL}/player/save`, {
                         method: 'POST',
@@ -426,17 +463,25 @@
                             power: gameState.power
                         })
                     });
-                } catch (error) {
-                    console.error('Error saving progress:', error);
-                }
 
-                updateDisplay();
-                telegram.hapticFeedback.impactOccurred('heavy');
-                telegram.showPopup({
-                    title: 'Yükseltme Başarılı!',
-                    message: `Gemi gücü ${gameState.power} seviyesine yükseltildi! 🚀`,
-                    buttons: [{type: 'ok'}]
-                });
+                    updateDisplay();
+                    telegram.hapticFeedback.impactOccurred('heavy');
+                    telegram.showPopup({
+                        title: 'Yükseltme Başarılı!',
+                        message: `Gemi gücü ${gameState.power} seviyesine yükseltildi! 🚀`,
+                        buttons: [{type: 'ok'}]
+                    });
+                } catch (error) {
+                    console.error('Upgrade error:', error);
+                    // Hata durumunda değerleri geri al
+                    gameState.minerals += cost;
+                    gameState.power -= 1;
+                    telegram.showPopup({
+                        title: 'Hata',
+                        message: 'Yükseltme başarısız!',
+                        buttons: [{type: 'ok'}]
+                    });
+                }
             } else {
                 telegram.hapticFeedback.notificationOccurred('error');
                 telegram.showPopup({
@@ -459,23 +504,25 @@
 
             try {
                 const provider = window.ton;
-                await provider.send('ton_sendTransaction', [{
+                const result = await provider.send('ton_sendTransaction', [{
                     to: 'UQBoTE6mAMlmLCF8uYWCu3TGYqTvbrRKdBxOASpY0oM6UhcJ',
                     value: '100000000' // 0.1 TON
                 }]);
 
+                // İşlem hash'i ile backend'e istek at
                 const response = await fetch(`${API_URL}/purchase`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         telegramId: telegram.initDataUnsafe.user.id,
-                        amount: 100
+                        transactionHash: result.transactionHash,
+                        amount: 0.1 // TON miktarı
                     })
                 });
 
                 if (response.ok) {
                     const data = await response.json();
-                    gameState.minerals += 100;
+                    gameState.minerals = data.minerals;
                     updateDisplay();
                     telegram.showPopup({
                         title: 'Başarılı',
@@ -493,7 +540,10 @@
             }
         }
 
-        // Initialize game
+        // Cooldown timer'ı güncelle
+        setInterval(updateCooldownTimer, 1000);
+
+        // Oyunu başlat
         telegram.ready();
         telegram.expand();
         initializePlayer();
