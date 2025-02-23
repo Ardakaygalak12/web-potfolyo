@@ -3,29 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TON Cüzdan Bağlantısı</title>
+    <title>Ton Wallet Bağlantısı</title>
 </head>
 <body>
-    <h1>TON Cüzdan Bağlantısı</h1>
-    <button id="connectButton">Cüzdan Bağla</button>
+    <h1>Ton Wallet Bağlantısı</h1>
+    <button id="connectButton">Cüzdanı Bağla</button>
     <p id="walletAddress"></p>
 
-    <script type="module">
-        import { TonConnect } from "https://cdn.jsdelivr.net/npm/@tonconnect/sdk@3.0.4/+esm";
-
-        const tonConnect = new TonConnect();
-
+    <script>
         document.getElementById("connectButton").addEventListener("click", async () => {
-            try {
-                const wallet = await tonConnect.connectWallet();
-                if (wallet) {
-                    document.getElementById("walletAddress").innerText = `Cüzdan Bağlandı: ${wallet.account.address}`;
-                } else {
-                    alert("Cüzdan bağlantısı iptal edildi.");
+            if (window.ton) {
+                try {
+                    const accounts = await window.ton.send("ton_requestAccounts");
+                    const walletAddress = accounts?.[0];
+                    if (walletAddress) {
+                        document.getElementById("walletAddress").innerText = "Cüzdan Bağlandı: " + walletAddress;
+                        console.log("Bağlı Cüzdan: ", walletAddress);
+                    } else {
+                        alert("Cüzdan bağlantısı reddedildi.");
+                    }
+                } catch (error) {
+                    console.error("Bağlantı hatası:", error);
+                    alert("Cüzdan bağlanırken hata oluştu.");
                 }
-            } catch (error) {
-                console.error("Bağlantı hatası:", error);
-                alert("Cüzdan bağlanırken bir hata oluştu.");
+            } else {
+                alert("Ton Wallet yüklü değil. Lütfen eklentiyi kurun.");
             }
         });
     </script>
