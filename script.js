@@ -1,25 +1,23 @@
-document.addEventListener('DOMContentLoaded', async () => {
-    const tonConnect = new TonConnect.TonConnect({
+import { TonConnect } from 'https://cdn.jsdelivr.net/npm/@tonconnect/sdk@2.0.0/dist/tonconnect.min.js';
+
+document.addEventListener("DOMContentLoaded", async () => {
+    const tonConnect = new TonConnect({
         manifestUrl: `${window.location.origin}/tonconnect-manifest.json`
     });
 
-    const connectBtn = document.getElementById('connectBtn');
-    const walletAddress = document.getElementById('walletAddress');
-
-    connectBtn.addEventListener('click', async () => {
+    document.getElementById("connectBtn").addEventListener("click", async () => {
         try {
             const wallets = await tonConnect.getWallets();
-            if (!wallets.length) throw new Error("Cüzdan bulunamadı.");
+            if (wallets.length === 0) throw new Error("Cüzdan bulunamadı.");
 
             const link = await tonConnect.connect({
                 universalLink: wallets[0].universalLink,
-                returnStrategy: 'back'
+                returnStrategy: "back"
             });
 
-            window.open(link, '_blank');
+            window.open(link, "_blank");
         } catch (error) {
-            console.error("Cüzdan bağlama hatası:", error.message || error);
-            alert(`Cüzdan bağlama hatası: ${error.message || error}`);
+            console.error("Bağlantı hatası:", error.message);
         }
     });
 });
